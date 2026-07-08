@@ -781,11 +781,22 @@ function renderMinutesTable(settled) {
 
 // ---------------------------------------------------------------- impostazioni
 
+// Accetta sia JSON puro sia il frammento JS copiato dalla console Firebase
+// ("const firebaseConfig = { apiKey: '...', ... };").
+function parseFirebaseConfigInput(raw) {
+  let s = raw.trim();
+  const m = s.match(/\{[\s\S]*\}/);
+  if (m) s = m[0];
+  try { return JSON.parse(s); } catch { /* prova come snippet JS */ }
+  s = s.replace(/'/g, '"')
+    .replace(/([{,]\s*)([A-Za-z_$][\w$]*)\s*:/g, '$1"$2":')
+    .replace(/,\s*}/g, '}');
+  try { return JSON.parse(s); } catch { return null; }
+}
+
 $('btn-save-config').addEventListener('click', async () => {
-  const raw = $('cfg-firebase').value.trim();
-  let cfg;
-  try { cfg = JSON.parse(raw); }
-  catch { $('cfg-status').textContent = 'JSON non valido.'; return; }
+  const cfg = parseFirebaseConfigInput($('cfg-firebase').value);
+  if (!cfg) { $('cfg-status').textContent = 'Config non riconosciuta: incolla il frammento firebaseConfig copiato dalla console.'; return; }
   if (!cfg.projectId || !cfg.apiKey) {
     $('cfg-status').textContent = 'Config incompleta: servono almeno apiKey e projectId.';
     return;
