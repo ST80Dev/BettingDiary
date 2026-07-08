@@ -35,6 +35,7 @@ const DC_OPTS = [['1X', '1X'], ['12', '12'], ['X2', 'X2']];
 const GGNG_OPTS = [['GG', 'GG'], ['NG', 'NG']];
 const PARI_OPTS = [['pari', 'Pari'], ['dispari', 'Dispari']];
 const OUDIR_OPTS = [['over', 'Over +'], ['under', 'Under −']];
+const ACTIVE_OPTS = [['si', 'Attiva'], ['no', 'Non attiva']];
 
 // Tipo di linea Over/Under: normale (intere/mezze) o asiatica (a quarto).
 const OUTYPE_OPTS = [['normale', 'Normale'], ['asiatica', 'Asiatica']];
@@ -273,6 +274,7 @@ function initStaticSelects() {
   fillSelect($('s-sport'), sportEntries, { empty: '—' });
   fillSelect($('fl-sport'), sportEntries, { empty: 'Tutti gli sport' });
   fillSelect($('fl-marketcode'), BET_TYPES, { empty: 'Tutti i tipi' });
+  buttonGroup($('s-active'), ACTIVE_OPTS, 'si');
   initMarketControls('f');
   initMarketControls('s');
 }
@@ -477,7 +479,7 @@ function openStrategyForm(id = null) {
   $('s-stake').value = s.stake_default ?? '';
   $('s-minute').value = s.entry_minute_default ?? '';
   $('s-order').value = s.sort_order ?? 0;
-  $('s-active').checked = s.active !== false;
+  setGroupValue($('s-active'), s.active !== false ? 'si' : 'no');
   setMarket('s', {
     market_code: s.market_code_default,
     selection: s.selection_default,
@@ -517,7 +519,7 @@ $('strategy-form').addEventListener('submit', async (e) => {
     stake_default: parseNum($('s-stake').value),
     entry_minute_default: parseNum($('s-minute').value),
     sort_order: parseNum($('s-order').value) ?? 0,
-    active: $('s-active').checked,
+    active: groupValue($('s-active')) === 'si',
   };
   if (!data.name) return;
   try {

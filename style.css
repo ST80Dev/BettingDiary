@@ -99,21 +99,6 @@ form { display: block; }
 .field.half { flex: 1; }
 .field.third { flex: 1; }
 .field.twothird { flex: 2; }
-.check { display: flex; align-items: center; gap: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; }
-.check input[type="checkbox"] {
-  -webkit-appearance: none; appearance: none;
-  flex: 0 0 auto; width: 26px; height: 26px; padding: 0; margin: 0;
-  border: 2px solid var(--border-strong); border-radius: 8px;
-  background: var(--bg2); position: relative; cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease;
-}
-.check input[type="checkbox"]:checked { background: var(--grad); border-color: transparent; }
-.check input[type="checkbox"]:checked::after {
-  content: ""; position: absolute; left: 8px; top: 3px;
-  width: 6px; height: 12px; border: solid #fff; border-width: 0 3px 3px 0;
-  transform: rotate(45deg);
-}
-.check input[type="checkbox"]:focus { outline: none; box-shadow: 0 0 0 4px var(--accent-soft); }
 
 /* ---- gruppi di pulsanti (segmented / chips, scelta ad albero) ---- */
 .field-group { margin-bottom: 14px; }
