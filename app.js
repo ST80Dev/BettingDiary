@@ -736,21 +736,21 @@ function renderBankrollChart(curve) {
       datasets: [{
         label: 'Bankroll (profit cumulativo €)',
         data: curve.map((p) => p.y),
-        borderColor: '#4f8cff',
-        backgroundColor: 'rgba(79,140,255,0.12)',
+        borderColor: '#4f7cff',
+        backgroundColor: 'rgba(79,124,255,0.14)',
         fill: true,
         pointRadius: 0,
         tension: 0.15,
-        borderWidth: 2,
+        borderWidth: 3,
       }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#8b96ad', boxWidth: 12 } } },
+      plugins: { legend: { labels: { color: '#64708c', boxWidth: 12, font: { weight: '600' } } } },
       scales: {
-        x: { ticks: { color: '#8b96ad', maxTicksLimit: 8 }, grid: { color: '#1f2940' } },
-        y: { ticks: { color: '#8b96ad' }, grid: { color: '#1f2940' } },
+        x: { ticks: { color: '#64708c', maxTicksLimit: 8 }, grid: { color: '#e6ebf6' } },
+        y: { ticks: { color: '#64708c' }, grid: { color: '#e6ebf6' } },
       },
     },
   });
