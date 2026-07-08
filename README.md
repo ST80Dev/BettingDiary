@@ -32,12 +32,14 @@ di progetto completo.
 
 ### 2. Configura l'app
 
-Apri l'app → tab **Impostazioni** → incolla il `firebaseConfig` come JSON → *Salva e connetti*.
-La config resta nel localStorage del dispositivo (non va committata; è comunque una chiave
-pubblicabile, non un secret).
+La config del progetto è già inclusa nel codice (`DEFAULT_FIREBASE_CONFIG` in `app.js`):
+l'app si connette da sola, non serve incollare nulla. La config Firebase non è un secret —
+è client-side per design e la protezione reale sono le regole Firestore.
 
-> Puoi incollare il frammento JavaScript copiato dalla console così com'è
-> (`const firebaseConfig = { apiKey: "...", ... };`): l'app lo riconosce e ne estrae i valori.
+Per puntare a un progetto diverso (es. da un altro dispositivo) apri **Impostazioni** →
+incolla il `firebaseConfig` → *Salva e connetti*: quel valore, salvato in localStorage,
+ha la precedenza sul default. Puoi incollare il frammento JavaScript copiato dalla console
+così com'è, incluse le righe di `import`: l'app estrae da solo l'oggetto `firebaseConfig`.
 
 ### 3. GitHub Pages
 

@@ -158,9 +158,24 @@ function toast(msg, undoFn = null) {
 
 // ---------------------------------------------------------------- firebase
 
+// Config di default del progetto BetDiary. Non è un secret: è client-side e la
+// protezione reale sono le regole Firestore (accesso solo autenticato). Un valore
+// salvato in localStorage dalle Impostazioni ha comunque la precedenza.
+const DEFAULT_FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyCmEITxoRAIHl49GikG12Ntez7Zgv3KZj4',
+  authDomain: 'betdiary-aaa34.firebaseapp.com',
+  projectId: 'betdiary-aaa34',
+  storageBucket: 'betdiary-aaa34.firebasestorage.app',
+  messagingSenderId: '947571323550',
+  appId: '1:947571323550:web:06720c7d437420b5cc018f',
+};
+
 function getFirebaseConfig() {
-  try { return JSON.parse(localStorage.getItem('bd_firebase_config')); }
-  catch { return null; }
+  try {
+    const stored = JSON.parse(localStorage.getItem('bd_firebase_config'));
+    if (stored && stored.projectId) return stored;
+  } catch { /* ignora */ }
+  return DEFAULT_FIREBASE_CONFIG;
 }
 
 async function initFirebase() {
@@ -782,16 +797,29 @@ function renderMinutesTable(settled) {
 // ---------------------------------------------------------------- impostazioni
 
 // Accetta sia JSON puro sia il frammento JS copiato dalla console Firebase
-// ("const firebaseConfig = { apiKey: '...', ... };").
+// ("const firebaseConfig = { apiKey: '...', ... };"), incluse le righe di import.
 function parseFirebaseConfigInput(raw) {
-  let s = raw.trim();
-  const m = s.match(/\{[\s\S]*\}/);
-  if (m) s = m[0];
-  try { return JSON.parse(s); } catch { /* prova come snippet JS */ }
-  s = s.replace(/'/g, '"')
+  const s = raw.trim();
+  try { return JSON.parse(s); } catch { /* prova a estrarre l'oggetto */ }
+  // Isola l'oggetto giusto: quello assegnato a firebaseConfig, o il primo che
+  // contiene apiKey. Evita di agganciare la graffa di "import { ... }".
+  let obj = null;
+  const assign = s.match(/firebaseConfig\s*=\s*(\{[\s\S]*?\})/);
+  if (assign) {
+    obj = assign[1];
+  } else {
+    const withKey = s.match(/\{[^{}]*\bapiKey\b[\s\S]*?\}/);
+    if (withKey) obj = withKey[0];
+    else {
+      const any = s.match(/\{[\s\S]*\}/);
+      if (any) obj = any[0];
+    }
+  }
+  if (!obj) return null;
+  const j = obj.replace(/'/g, '"')
     .replace(/([{,]\s*)([A-Za-z_$][\w$]*)\s*:/g, '$1"$2":')
     .replace(/,\s*}/g, '}');
-  try { return JSON.parse(s); } catch { return null; }
+  try { return JSON.parse(j); } catch { return null; }
 }
 
 $('btn-save-config').addEventListener('click', async () => {
