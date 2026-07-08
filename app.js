@@ -37,7 +37,10 @@ const PARI_OPTS = [['pari', 'Pari'], ['dispari', 'Dispari']];
 const OUDIR_OPTS = [['over', 'Over +'], ['under', 'Under −']];
 
 // Linee gol più comuni, incluse le asiatiche a quarto (0.75 = 0.5/1, 1.25 = 1/1.5, ...)
-const OU_LINES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 3, 3.5];
+const OU_LINES = [
+  0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75,
+  3, 3.25, 3.5, 3.75, 4, 4.25, 4.5,
+];
 
 // Intervalli multigoal comuni
 const MULTIGOAL_RANGES = [
@@ -543,6 +546,17 @@ function resetBetForm({ keepPreset = true } = {}) {
 }
 
 $('btn-cancel-edit').addEventListener('click', () => resetBetForm());
+
+// Stepper rapidi per lo stake: +/- 1 / 0.5 / 0.05 (arrotondato a 2 decimali, mai sotto zero)
+$('stake-steppers').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-delta]');
+  if (!btn) return;
+  const delta = parseFloat(btn.dataset.delta);
+  const cur = parseNum($('f-stake').value) || 0;
+  const next = Math.max(0, Math.round((cur + delta) * 100) / 100);
+  $('f-stake').value = next ? String(next) : '';
+  $('f-stake').focus();
+});
 
 $('bet-form').addEventListener('submit', async (e) => {
   e.preventDefault();
