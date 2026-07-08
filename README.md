@@ -47,6 +47,9 @@ L'app sarà su `https://st80dev.github.io/BettingDiary/`.
 
 1. **Impostazioni → Strategie**: crea i tuoi preset (sport, mercato, linea, stake, minuto tipico).
 2. **Nuova**: tap sul preset → digiti evento, quota, stake, minuto reale e punteggio → *Salva*.
+   Puoi anche segnare subito l'**Esito** nel form (Win / Void / Loss, più ½ Win / ½ Loss sulle
+   giocate asiatiche): il profit si calcola da solo e la giocata parte già saldata. Lascia
+   *Pending* per saldarla dopo.
 3. **Pending**: a fine match, tap su W / ½W / V / ½L / L — il profit si calcola da solo.
 4. **Dashboard**: filtri per periodo/strategia/sport/mercato; fasce di quota configurabili
    dalle Impostazioni.

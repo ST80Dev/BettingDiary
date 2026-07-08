@@ -55,6 +55,18 @@ const RESULT_LABELS = {
   half_win: 'Half win', half_loss: 'Half loss',
 };
 
+// Opzioni esito per l'inserimento contestuale. Le mezze vincite/perdite (e i
+// relativi mezzi rimborsi) esistono solo sulle giocate asiatiche a quarto,
+// quindi si mostrano soltanto quando la linea è asiatica.
+function resultOptionsFor(asian) {
+  const opts = [['pending', 'Pending'], ['win', 'Win']];
+  if (asian) opts.push(['half_win', '½ Win']);
+  opts.push(['void', 'Void']);
+  if (asian) opts.push(['half_loss', '½ Loss']);
+  opts.push(['loss', 'Loss']);
+  return opts;
+}
+
 const MINUTE_BUCKETS = [
   { label: "≤25'", min: 0, max: 25 },
   { label: "26–30'", min: 26, max: 30 },
@@ -322,11 +334,12 @@ function initMarketControls(p) {
   buttonGroup($(`${p}-ggng`), GGNG_OPTS, '');
   buttonGroup($(`${p}-pari`), PARI_OPTS, '');
   buttonGroup($(`${p}-oudir`), OUDIR_OPTS, 'over');
-  buttonGroup($(`${p}-outype`), OUTYPE_OPTS, 'normale', () => renderOuLines(p));
+  buttonGroup($(`${p}-outype`), OUTYPE_OPTS, 'normale', () => { renderOuLines(p); renderResultOptions(p); });
   renderOuLines(p);
   buttonGroup($(`${p}-multigoal`), MULTIGOAL_RANGES.map((r) => [r, r]), '');
-  buttonGroup($(`${p}-type`), BET_TYPES, '', (type) => showSelBlock(p, type));
+  buttonGroup($(`${p}-type`), BET_TYPES, '', (type) => { showSelBlock(p, type); renderResultOptions(p); });
   showSelBlock(p, '');
+  renderResultOptions(p);
 }
 
 function showSelBlock(p, type) {
@@ -342,6 +355,45 @@ function renderOuLines(p) {
   const cur = groupValue($(`${p}-ouline`));
   const keep = lines.map(String).includes(cur) ? cur : '';
   buttonGroup($(`${p}-ouline`), lines.map((l) => [String(l), lineLabel(l)]), keep);
+}
+
+// True se il mercato selezionato è una giocata Over/Under asiatica (linea a quarto).
+function marketIsAsian(p) {
+  return groupValue($(`${p}-type`)) === 'over_under'
+    && (groupValue($(`${p}-outype`)) || 'normale') === 'asiatica';
+}
+
+// (Ri)disegna i pulsanti esito del form giocata in base al tipo di linea.
+// No-op sui prefissi senza controllo esito (es. le strategie).
+// forceHalves: mostra comunque le mezze (per caricare un esito già mezzo su una
+// giocata non asiatica, es. saldata a metà dalla scheda Pending). In modifica
+// interattiva del tipo giocata resta false, così cambiando mercato una mezza
+// selezionata torna a "pending" invece di rimanere incoerente.
+function renderResultOptions(p, forceHalves = false) {
+  const grp = $(`${p}-result`);
+  if (!grp) return;
+  const cur = groupValue(grp) || 'pending';
+  const opts = resultOptionsFor(marketIsAsian(p) || forceHalves);
+  const keep = opts.some(([v]) => v === cur) ? cur : 'pending';
+  buttonGroup(grp, opts, keep, () => updateResultProfit());
+  updateResultProfit();
+}
+
+// Anteprima del profit calcolato dall'esito selezionato nel form giocata.
+function updateResultProfit() {
+  const el = $('f-result-profit');
+  if (!el) return;
+  const result = groupValue($('f-result')) || 'pending';
+  const odds = parseNum($('f-odds').value);
+  const stake = parseNum($('f-stake').value);
+  if (result === 'pending' || !odds || odds <= 1 || !stake || stake <= 0) {
+    el.textContent = '';
+    el.className = 'result-profit hidden';
+    return;
+  }
+  const profit = Math.round(computeProfit(result, odds, stake) * 100) / 100;
+  el.textContent = `${RESULT_LABELS[result]}: ${fmtMoney(profit)}`;
+  el.className = 'result-profit ' + (profit > 0 ? 'pos' : profit < 0 ? 'neg' : 'zero');
 }
 
 // Legge il mercato composto dai controlli con prefisso p
@@ -386,6 +438,7 @@ function setMarket(p, m = {}) {
   renderOuLines(p);
   setGroupValue($(`${p}-ouline`), type === 'over_under' && m.line != null ? String(m.line) : '');
   $(`${p}-altro`).value = type === 'altro' ? (m.selection || '') : '';
+  renderResultOptions(p); // adegua le opzioni esito (mezze solo se asiatica)
 }
 
 // ---------------------------------------------------------------- strategie
@@ -560,11 +613,16 @@ function resetBetForm({ keepPreset = true } = {}) {
   $('bet-form').reset();
   $('f-placed').value = toDatetimeLocal(new Date());
   $('f-sport').value = 'calcio';
-  setMarket('f', {}); // riporta interruttori e tipo allo stato neutro
+  setGroupValue($('f-result'), 'pending');
+  setMarket('f', {}); // riporta interruttori e tipo allo stato neutro (rirender esito)
   if (keepPreset) applyPreset();
+  updateResultProfit();
 }
 
 $('btn-cancel-edit').addEventListener('click', () => resetBetForm());
+
+// Quota/stake alimentano l'anteprima del profit dell'esito contestuale.
+['f-odds', 'f-stake'].forEach((id) => $(id).addEventListener('input', updateResultProfit));
 
 $('bet-form').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -597,20 +655,27 @@ $('bet-form').addEventListener('submit', async (e) => {
     score_at_entry: $('f-score').value.trim() || null,
   };
 
+  // Esito segnato contestualmente (opzionale): se diverso da pending calcolo subito il profit.
+  const result = groupValue($('f-result')) || 'pending';
+  const profit = result === 'pending'
+    ? null
+    : Math.round(computeProfit(result, data.odds, data.stake) * 100) / 100;
+  const settledMsg = result === 'pending' ? '' : ` · ${RESULT_LABELS[result]} (${fmtMoney(profit)})`;
+
   try {
     if (editingBetId) {
-      await updateDoc(doc(db, 'bets', editingBetId), data);
-      toast('Giocata aggiornata');
+      await updateDoc(doc(db, 'bets', editingBetId), { ...data, result, profit });
+      toast('Giocata aggiornata' + settledMsg);
     } else {
       await addDoc(collection(db, 'bets'), {
         ...data,
         strategy_id: strategy?.id || null,
         strategy_name: strategy?.name || null,
-        result: 'pending',
-        profit: null,
+        result,
+        profit,
         created_at: Timestamp.now(),
       });
-      toast('Giocata salvata ✓');
+      toast('Giocata salvata ✓' + settledMsg);
     }
     resetBetForm();
   } catch (err) {
@@ -646,7 +711,10 @@ function editBet(bet) {
   $('f-minute').value = bet.entry_minute ?? '';
   $('f-score').value = bet.score_at_entry || '';
   $('f-sport').value = bet.sport || 'calcio';
-  setMarket('f', bet);
+  setMarket('f', bet); // imposta il mercato (e rirender le opzioni esito)
+  setGroupValue($('f-result'), bet.result || 'pending');
+  // preserva un esito già "mezzo" anche se il mercato non risultasse asiatico
+  renderResultOptions('f', bet.result === 'half_win' || bet.result === 'half_loss');
   const d = toDate(bet.placed_at);
   $('f-placed').value = d ? toDatetimeLocal(d) : toDatetimeLocal(new Date());
   window.scrollTo({ top: 0, behavior: 'smooth' });

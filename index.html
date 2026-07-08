@@ -91,6 +91,14 @@
           <label class="field grow"><span>Descrizione giocata</span><input type="text" id="f-altro" placeholder="es. Under 3.5 casa"></label>
         </div>
 
+        <!-- esito contestuale: consente di segnare subito il risultato in fase di inserimento.
+             Le mezze vincite/perdite compaiono solo sulle giocate asiatiche (linee a quarto). -->
+        <div class="field-group" id="f-result-group">
+          <span class="field-label">Esito <small class="result-hint">(opzionale — lascia “Pending” per saldare dopo)</small></span>
+          <div class="chips results" id="f-result"></div>
+          <div id="f-result-profit" class="result-profit hidden"></div>
+        </div>
+
         <details id="form-details">
           <summary>Altri campi</summary>
           <div class="field-row">

@@ -143,6 +143,27 @@ form { display: block; }
 .sel-block.field-row { display: flex; }
 .sel-block.field-row.hidden { display: none; }
 
+/* ---- esito contestuale nel form giocata ---- */
+.result-hint { font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--muted); }
+.result-profit { margin-top: 10px; font-size: 0.95rem; font-weight: 800; }
+.result-profit.pos { color: var(--green); }
+.result-profit.neg { color: var(--red); }
+.result-profit.zero { color: var(--muted); }
+#f-result .seg-btn[data-val="win"].active,
+#f-result .seg-btn[data-val="half_win"].active {
+  border-color: var(--green); background: var(--green-soft); color: var(--green);
+  box-shadow: 0 4px 12px rgba(18, 185, 129, 0.18);
+}
+#f-result .seg-btn[data-val="loss"].active,
+#f-result .seg-btn[data-val="half_loss"].active {
+  border-color: var(--red); background: var(--red-soft); color: var(--red);
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.18);
+}
+#f-result .seg-btn[data-val="void"].active {
+  border-color: var(--yellow); background: var(--yellow-soft); color: var(--yellow);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.18);
+}
+
 input, select, textarea {
   background: var(--bg2); border: 2px solid var(--border); color: var(--text);
   border-radius: 12px; padding: 13px 14px; font-size: 1.05rem; width: 100%;
