@@ -39,7 +39,6 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 17px;
   line-height: 1.45;
-  padding-bottom: 84px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -59,7 +58,7 @@ body {
 .conn-status.ok { color: #b6ffe0; }
 .conn-status.err { color: #ffd0d7; }
 
-#main { padding: 16px 16px 40px; max-width: 780px; margin: 0 auto; }
+#main { padding: 16px 16px calc(108px + env(safe-area-inset-bottom)); max-width: 780px; margin: 0 auto; }
 
 .view-title { font-size: 1.35rem; font-weight: 800; margin: 16px 0 12px; letter-spacing: -0.01em; }
 .sub-title {
