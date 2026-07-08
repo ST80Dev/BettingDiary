@@ -178,12 +178,16 @@ function getFirebaseConfig() {
   return DEFAULT_FIREBASE_CONFIG;
 }
 
+let lastFirebaseError = '';
+
 async function initFirebase() {
   const cfg = getFirebaseConfig();
   const status = $('conn-status');
+  lastFirebaseError = '';
   if (!cfg || !cfg.projectId) {
     status.className = 'conn-status err';
     status.title = 'Firebase non configurato';
+    lastFirebaseError = 'Config Firebase mancante.';
     return false;
   }
   try {
@@ -198,6 +202,7 @@ async function initFirebase() {
     console.error('Init Firebase fallito', err);
     status.className = 'conn-status err';
     status.title = 'Errore: ' + err.message;
+    lastFirebaseError = `${err.code || 'errore'}: ${err.message}`;
     return false;
   }
 }
@@ -895,10 +900,12 @@ async function main() {
 
   const ok = await initFirebase();
   if (!ok) {
-    $('cfg-status').textContent = 'Non connesso: incolla la config e salva.';
+    $('cfg-status').textContent = 'Non connesso — ' + (lastFirebaseError || 'causa sconosciuta.');
+    $('cfg-status').style.color = 'var(--red)';
     switchView('impostazioni');
     return;
   }
+  $('cfg-status').style.color = '';
   $('cfg-status').textContent = `Connesso al progetto "${cfg.projectId}".`;
   await loadBands();
   await loadStrategies();
