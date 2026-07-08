@@ -25,8 +25,8 @@
       <form id="bet-form" autocomplete="off">
         <div class="field-row">
           <label class="field grow">
-            <span>Evento *</span>
-            <input type="text" id="f-event" placeholder="Casa - Ospite" required>
+            <span>Evento</span>
+            <input type="text" id="f-event" placeholder="Casa - Ospite (opzionale)">
           </label>
         </div>
 
@@ -56,36 +56,50 @@
           </label>
         </div>
 
+        <!-- interruttori situazione / durata -->
+        <div class="field-row">
+          <div class="field half"><span>Situazione</span><div class="segmented" id="f-live"></div></div>
+          <div class="field half"><span>Durata</span><div class="segmented" id="f-period"></div></div>
+        </div>
+
+        <!-- tipo giocata a pulsanti → rivela solo le scelte pertinenti -->
+        <div class="field-group">
+          <span class="field-label">Tipo giocata</span>
+          <div class="chips" id="f-type"></div>
+        </div>
+        <div class="sel-block hidden" id="f-sel-1x2">
+          <span class="field-label">Esito 1X2</span><div class="segmented" id="f-1x2"></div>
+        </div>
+        <div class="sel-block hidden" id="f-sel-doppia_chance">
+          <span class="field-label">Doppia chance</span><div class="segmented" id="f-dc"></div>
+        </div>
+        <div class="sel-block hidden" id="f-sel-over_under">
+          <span class="field-label">Direzione</span><div class="segmented" id="f-oudir"></div>
+          <span class="field-label">Linea gol</span><div class="chips" id="f-ouline"></div>
+        </div>
+        <div class="sel-block hidden" id="f-sel-gg_ng">
+          <span class="field-label">Gol / NoGol</span><div class="segmented" id="f-ggng"></div>
+        </div>
+        <div class="sel-block hidden" id="f-sel-multigoal">
+          <span class="field-label">Intervallo gol</span><div class="chips" id="f-multigoal"></div>
+        </div>
+        <div class="sel-block hidden" id="f-sel-pari_dispari">
+          <span class="field-label">Pari / Dispari</span><div class="segmented" id="f-pari"></div>
+        </div>
+        <div class="sel-block hidden field-row" id="f-sel-altro">
+          <label class="field grow"><span>Descrizione giocata</span><input type="text" id="f-altro" placeholder="es. Under 3.5 casa"></label>
+        </div>
+
         <details id="form-details">
-          <summary>Altri campi (precompilati dal preset)</summary>
+          <summary>Altri campi</summary>
           <div class="field-row">
             <label class="field half">
               <span>Sport</span>
               <select id="f-sport"></select>
             </label>
             <label class="field half">
-              <span>Tipo mercato</span>
-              <select id="f-marketcode"></select>
-            </label>
-          </div>
-          <div class="field-row">
-            <label class="field twothird">
-              <span>Mercato (testo)</span>
-              <input type="text" id="f-market" placeholder="Over 0.5 1T (asiatico)">
-            </label>
-            <label class="field third">
-              <span>Linea</span>
-              <input type="text" id="f-line" inputmode="decimal" placeholder="0.5">
-            </label>
-          </div>
-          <div class="field-row">
-            <label class="field half">
               <span>Data/ora giocata</span>
               <input type="datetime-local" id="f-placed">
-            </label>
-            <label class="field half">
-              <span>Note</span>
-              <input type="text" id="f-notes">
             </label>
           </div>
         </details>
@@ -120,7 +134,7 @@
         </select>
         <select id="fl-strategy"><option value="">Tutte le strategie</option></select>
         <select id="fl-sport"><option value="">Tutti gli sport</option></select>
-        <select id="fl-marketcode"><option value="">Tutti i mercati</option></select>
+        <select id="fl-marketcode"><option value="">Tutti i tipi</option></select>
       </div>
 
       <div id="kpi-cards" class="kpi-cards"></div>
@@ -154,17 +168,44 @@
           <label class="field grow"><span>Descrizione</span><input type="text" id="s-description"></label>
         </div>
         <div class="field-row">
-          <label class="field half"><span>Sport default</span><select id="s-sport"></select></label>
-          <label class="field half"><span>Tipo mercato default</span><select id="s-marketcode"></select></label>
+          <label class="field half"><span>Sport</span><select id="s-sport"></select></label>
+          <label class="field half"><span>Minuto tipico</span><input type="number" id="s-minute" inputmode="numeric"></label>
         </div>
+
         <div class="field-row">
-          <label class="field twothird"><span>Mercato default (testo)</span><input type="text" id="s-market"></label>
-          <label class="field third"><span>Linea default</span><input type="text" id="s-line" inputmode="decimal"></label>
+          <div class="field half"><span>Situazione</span><div class="segmented" id="s-live"></div></div>
+          <div class="field half"><span>Durata</span><div class="segmented" id="s-period"></div></div>
         </div>
+        <div class="field-group">
+          <span class="field-label">Tipo giocata</span>
+          <div class="chips" id="s-type"></div>
+        </div>
+        <div class="sel-block hidden" id="s-sel-1x2">
+          <span class="field-label">Esito 1X2</span><div class="segmented" id="s-1x2"></div>
+        </div>
+        <div class="sel-block hidden" id="s-sel-doppia_chance">
+          <span class="field-label">Doppia chance</span><div class="segmented" id="s-dc"></div>
+        </div>
+        <div class="sel-block hidden" id="s-sel-over_under">
+          <span class="field-label">Direzione</span><div class="segmented" id="s-oudir"></div>
+          <span class="field-label">Linea gol</span><div class="chips" id="s-ouline"></div>
+        </div>
+        <div class="sel-block hidden" id="s-sel-gg_ng">
+          <span class="field-label">Gol / NoGol</span><div class="segmented" id="s-ggng"></div>
+        </div>
+        <div class="sel-block hidden" id="s-sel-multigoal">
+          <span class="field-label">Intervallo gol</span><div class="chips" id="s-multigoal"></div>
+        </div>
+        <div class="sel-block hidden" id="s-sel-pari_dispari">
+          <span class="field-label">Pari / Dispari</span><div class="segmented" id="s-pari"></div>
+        </div>
+        <div class="sel-block hidden field-row" id="s-sel-altro">
+          <label class="field grow"><span>Descrizione giocata</span><input type="text" id="s-altro"></label>
+        </div>
+
         <div class="field-row">
-          <label class="field third"><span>Stake default</span><input type="text" id="s-stake" inputmode="decimal"></label>
-          <label class="field third"><span>Minuto tipico</span><input type="number" id="s-minute" inputmode="numeric"></label>
-          <label class="field third"><span>Ordine</span><input type="number" id="s-order" inputmode="numeric" value="0"></label>
+          <label class="field half"><span>Stake default</span><input type="text" id="s-stake" inputmode="decimal"></label>
+          <label class="field half"><span>Ordine pulsante</span><input type="number" id="s-order" inputmode="numeric" value="0"></label>
         </div>
         <div class="field-row">
           <label class="check"><input type="checkbox" id="s-active" checked> Attiva</label>
