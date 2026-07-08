@@ -36,9 +36,8 @@ Apri l'app → tab **Impostazioni** → incolla il `firebaseConfig` come JSON �
 La config resta nel localStorage del dispositivo (non va committata; è comunque una chiave
 pubblicabile, non un secret).
 
-> Nota: il pulsante di Firebase copia un frammento JavaScript. Serve solo l'oggetto tra
-> le graffe, in formato JSON, es.:
-> `{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}`
+> Puoi incollare il frammento JavaScript copiato dalla console così com'è
+> (`const firebaseConfig = { apiKey: "...", ... };`): l'app lo riconosce e ne estrae i valori.
 
 ### 3. GitHub Pages
 
