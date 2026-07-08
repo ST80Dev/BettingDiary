@@ -1,5 +1,9 @@
 # BetDiary — Diario bet manuale con preset di strategia
 
+> Nota deploy: si parte come **semplice web app su GitHub Pages**, aperta dal browser del
+> telefono. Niente manifest/service worker in v1: la "PWA installabile" è un'aggiunta
+> opzionale futura (vedi §5.5).
+
 > Documento bootstrap per Claude Code. Leggere integralmente prima di scrivere codice.
 > Workflow: procedere per fasi, chiedere conferma a Simone al termine di ogni fase prima di passare alla successiva.
 > Questo documento sostituisce la versione precedente centrata sull'estrazione AI da screenshot:
@@ -9,7 +13,8 @@
 
 ## 1. Obiettivo
 
-PWA personale per registrare ~50 bet/giorno con **inserimento manuale velocissimo** basato su
+Web app personale (servita da GitHub Pages, usata dal browser del telefono) per registrare
+~50 bet/giorno con **inserimento manuale velocissimo** basato su
 preset di strategia: tap sulla strategia → form precompilato → si digitano solo i campi
 variabili → salvataggio. Multi-sport e multi-tipo di giocata (solo **singole**, a quota fissa,
 inclusi mercati asiatici con esiti half win/half loss e void).
@@ -22,7 +27,7 @@ Principi di design (non negoziabili):
 - **Inserimento sotto i 10 secondi**: il preset compila tutto il compilabile, l'utente tocca
   solo ciò che cambia per forza a ogni giocata.
 - Vanilla JS, HTML, CSS. Nessun framework, nessun build step. File separati ammessi
-  (index.html, app.js, style.css, manifest.json, sw.js) ma niente bundler.
+  (index.html, app.js, style.css) ma niente bundler.
 - Mobile-first: l'uso principale è da telefono, spesso durante il live.
 - Interfaccia in italiano.
 - Niente tracking del bookmaker: non interessa monitorare differenze tra conti.
@@ -30,7 +35,7 @@ Principi di design (non negoziabili):
 ## 2. Stack e architettura
 
 ```
-[PWA su GitHub Pages]
+[Web app su GitHub Pages]
    │  supabase-js (anon key + RLS)
    ▼
 [Supabase Postgres]  ← tabelle: strategies, bets, app_settings
@@ -38,7 +43,7 @@ Principi di design (non negoziabili):
 [Dashboard: query client-side + aggregazioni in JS]
 ```
 
-Nessuna Edge Function nelle fasi 1–4: tutto il flusso è PWA ↔ Postgres.
+Nessuna Edge Function nelle fasi 1–4: tutto il flusso è web app ↔ Postgres.
 L'Edge Function `extract-bet` (Claude vision) arriva solo nella fase opzionale 5 (Appendice A).
 
 Con ~50 bet/giorno (~1.500/mese, ~18.000/anno) le aggregazioni della dashboard si fanno
@@ -116,7 +121,7 @@ create policy "anon full access settings" on app_settings for all using (true) w
 
 ### Vocabolario `market_code`
 
-Testo libero nel DB (niente enum → niente migration per estenderlo), ma la PWA propone e usa
+Testo libero nel DB (niente enum → niente migration per estenderlo), ma l'app propone e usa
 solo questo vocabolario:
 
 `over_under` · `handicap_asiatico` · `handicap_europeo` · `1x2` · `testa_a_testa` ·
@@ -127,7 +132,7 @@ handicap"); il campo `market` testuale resta la descrizione leggibile della gioc
 
 ### Sport
 
-Testo libero nel DB; la PWA propone un vocabolario italiano fisso (`calcio`, `tennis`,
+Testo libero nel DB; l'app propone un vocabolario italiano fisso (`calcio`, `tennis`,
 `basket`, `volley`, `hockey`, `altro`) tramite select/chips, così i filtri restano puliti
 senza una tabella dedicata.
 
@@ -149,7 +154,7 @@ anche per linea.
 Il profit si scrive nella riga al momento del saldo (non è una colonna generata) così i
 totali di dashboard sono una semplice somma.
 
-## 5. PWA — schermate
+## 5. Web app — schermate
 
 ### 5.1 Inserimento rapido (home)
 
@@ -199,23 +204,26 @@ Grafici: Chart.js da CDN.
 - Soglie fasce di quota (scrive su `app_settings`).
 - Export CSV completo (backup).
 
-### PWA shell
+### 5.5 PWA shell (opzionale, rimandata)
+
+In v1 l'app si usa dal browser all'URL di GitHub Pages (eventualmente aggiunta alla home
+screen come semplice segnalibro). Solo se in futuro servirà l'esperienza installata:
 
 - `manifest.json` (nome BetDiary, tema scuro, icone 192/512 generate come SVG→PNG).
 - `sw.js` minimale: cache-first per gli asset statici, network-only per le chiamate Supabase.
-  Niente sync offline in v1.
+  Niente sync offline.
 
 ## 6. Fasi di lavoro per Claude Code
 
 1. **Fase 1 — Supabase**: creare tabelle + seed + policy con lo SQL sopra (via MCP Supabase
    o dashboard). Verifica con qualche insert/select di prova.
-2. **Fase 2 — PWA inserimento**: home con preset, form rapido, salvataggio, CRUD strategie
-   in impostazioni. Test end-to-end da mobile.
+2. **Fase 2 — Inserimento**: home con preset, form rapido, salvataggio, CRUD strategie
+   in impostazioni. Test end-to-end da mobile (browser, via GitHub Pages).
 3. **Fase 3 — Pending e saldo**: lista pending, tap di esito, calcolo profit, undo.
 4. **Fase 4 — Dashboard**: KPI, fasce configurabili, analisi per minuto, grafici, filtri,
-   export CSV, PWA shell completa.
-5. **Fase 5 (opzionale)** — Estrazione AI da screenshot: vedi Appendice A. Da valutare solo
-   a diario e dashboard consolidati.
+   export CSV.
+5. **Fase 5 (opzionale)** — PWA shell installabile (§5.5) ed estrazione AI da screenshot
+   (Appendice A). Da valutare solo a diario e dashboard consolidati.
 
 Deploy: repo GitHub dedicato + GitHub Pages. Nessun server proprio necessario.
 
@@ -235,13 +243,13 @@ Deploy: repo GitHub dedicato + GitHub Pages. Nessun server proprio necessario.
 Architettura prevista (invariata rispetto al progetto originale, adattata al nuovo schema):
 
 ```
-[PWA] → upload/paste screenshot (base64)
+[Web app] → upload/paste screenshot (base64)
       → [Supabase Edge Function "extract-bet"]  ← ANTHROPIC_API_KEY come secret
       → Claude API (vision, modello claude-haiku-4-5 come costante configurabile)
-      → JSON strutturato → schermata di conferma della PWA → insert in bets
+      → JSON strutturato → schermata di conferma dell'app → insert in bets
 ```
 
-- La key resta server-side come secret; la PWA può stare pubblica su GitHub Pages.
+- La key resta server-side come secret; l'app può stare pubblica su GitHub Pages.
 - NON salvare le immagini su Storage: solo JSON estratto + SHA-256 dell'immagine in
   `image_hash` per dedup (l'indice unico esiste già).
 - Due modalità: `single` (una schedina → precompila il form di conferma) e `settlement`
