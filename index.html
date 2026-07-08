@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f1420">
+  <title>BetDiary</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📓</text></svg>">
+</head>
+<body>
+  <header class="topbar">
+    <h1>📓 BetDiary</h1>
+    <span id="conn-status" class="conn-status" title="Stato connessione">●</span>
+  </header>
+
+  <main id="main">
+
+    <!-- ============ TAB: NUOVA ============ -->
+    <section id="view-nuova" class="view">
+      <h2 class="view-title" id="form-title">Nuova giocata</h2>
+
+      <div id="strategy-grid" class="strategy-grid"></div>
+
+      <form id="bet-form" autocomplete="off">
+        <div class="field-row">
+          <label class="field grow">
+            <span>Evento *</span>
+            <input type="text" id="f-event" placeholder="Casa - Ospite" required>
+          </label>
+        </div>
+
+        <div class="field-row">
+          <label class="field third">
+            <span>Quota *</span>
+            <input type="text" id="f-odds" inputmode="decimal" placeholder="1.88" required>
+          </label>
+          <label class="field third">
+            <span>Stake *</span>
+            <input type="text" id="f-stake" inputmode="decimal" placeholder="10">
+          </label>
+          <label class="field third">
+            <span>Minuto</span>
+            <input type="number" id="f-minute" inputmode="numeric" min="0" max="150" placeholder="32">
+          </label>
+        </div>
+
+        <div class="field-row">
+          <label class="field third">
+            <span>Punteggio</span>
+            <input type="text" id="f-score" placeholder="0-0">
+          </label>
+          <label class="field twothird">
+            <span>Competizione</span>
+            <input type="text" id="f-competition" placeholder="(opzionale)">
+          </label>
+        </div>
+
+        <details id="form-details">
+          <summary>Altri campi (precompilati dal preset)</summary>
+          <div class="field-row">
+            <label class="field half">
+              <span>Sport</span>
+              <select id="f-sport"></select>
+            </label>
+            <label class="field half">
+              <span>Tipo mercato</span>
+              <select id="f-marketcode"></select>
+            </label>
+          </div>
+          <div class="field-row">
+            <label class="field twothird">
+              <span>Mercato (testo)</span>
+              <input type="text" id="f-market" placeholder="Over 0.5 1T (asiatico)">
+            </label>
+            <label class="field third">
+              <span>Linea</span>
+              <input type="text" id="f-line" inputmode="decimal" placeholder="0.5">
+            </label>
+          </div>
+          <div class="field-row">
+            <label class="field half">
+              <span>Data/ora giocata</span>
+              <input type="datetime-local" id="f-placed">
+            </label>
+            <label class="field half">
+              <span>Note</span>
+              <input type="text" id="f-notes">
+            </label>
+          </div>
+        </details>
+
+        <div class="form-actions">
+          <button type="submit" class="btn primary big" id="btn-save">Salva giocata</button>
+          <button type="button" class="btn danger hidden" id="btn-delete">Elimina</button>
+          <button type="button" class="btn ghost hidden" id="btn-cancel-edit">Annulla modifica</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============ TAB: PENDING ============ -->
+    <section id="view-pending" class="view hidden">
+      <h2 class="view-title">Da saldare <span id="pending-count" class="badge"></span></h2>
+      <div id="pending-list" class="bet-list"></div>
+      <h2 class="view-title">Saldate di recente</h2>
+      <div id="settled-list" class="bet-list"></div>
+    </section>
+
+    <!-- ============ TAB: DASHBOARD ============ -->
+    <section id="view-dashboard" class="view hidden">
+      <h2 class="view-title">Dashboard</h2>
+
+      <div class="filters">
+        <select id="fl-period">
+          <option value="7">7 giorni</option>
+          <option value="30" selected>30 giorni</option>
+          <option value="90">90 giorni</option>
+          <option value="365">1 anno</option>
+          <option value="all">Tutto</option>
+        </select>
+        <select id="fl-strategy"><option value="">Tutte le strategie</option></select>
+        <select id="fl-sport"><option value="">Tutti gli sport</option></select>
+        <select id="fl-marketcode"><option value="">Tutti i mercati</option></select>
+      </div>
+
+      <div id="kpi-cards" class="kpi-cards"></div>
+
+      <div class="chart-box"><canvas id="chart-bankroll"></canvas></div>
+
+      <h3 class="sub-title">Per fascia di quota</h3>
+      <div class="table-scroll"><table id="tbl-bands" class="stats-table"></table></div>
+
+      <h3 class="sub-title">Per minuto d'ingresso</h3>
+      <div class="table-scroll"><table id="tbl-minutes" class="stats-table"></table></div>
+
+      <h3 class="sub-title">Ultime giocate</h3>
+      <div id="recent-list" class="bet-list"></div>
+    </section>
+
+    <!-- ============ TAB: IMPOSTAZIONI ============ -->
+    <section id="view-impostazioni" class="view hidden">
+      <h2 class="view-title">Impostazioni</h2>
+
+      <h3 class="sub-title">Connessione Firebase</h3>
+      <p class="hint">Incolla qui l'oggetto <code>firebaseConfig</code> (JSON) della tua web app Firebase. Vedi README per il setup del progetto.</p>
+      <textarea id="cfg-firebase" rows="6" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'></textarea>
+      <button class="btn primary" id="btn-save-config">Salva e connetti</button>
+      <p id="cfg-status" class="hint"></p>
+
+      <h3 class="sub-title">Strategie (preset)</h3>
+      <div id="strategy-list" class="strategy-list"></div>
+      <button class="btn primary" id="btn-new-strategy">+ Nuova strategia</button>
+
+      <form id="strategy-form" class="hidden">
+        <h3 class="sub-title" id="strategy-form-title">Nuova strategia</h3>
+        <div class="field-row">
+          <label class="field grow"><span>Nome *</span><input type="text" id="s-name" required></label>
+        </div>
+        <div class="field-row">
+          <label class="field grow"><span>Descrizione</span><input type="text" id="s-description"></label>
+        </div>
+        <div class="field-row">
+          <label class="field half"><span>Sport default</span><select id="s-sport"></select></label>
+          <label class="field half"><span>Tipo mercato default</span><select id="s-marketcode"></select></label>
+        </div>
+        <div class="field-row">
+          <label class="field twothird"><span>Mercato default (testo)</span><input type="text" id="s-market"></label>
+          <label class="field third"><span>Linea default</span><input type="text" id="s-line" inputmode="decimal"></label>
+        </div>
+        <div class="field-row">
+          <label class="field third"><span>Stake default</span><input type="text" id="s-stake" inputmode="decimal"></label>
+          <label class="field third"><span>Minuto tipico</span><input type="number" id="s-minute" inputmode="numeric"></label>
+          <label class="field third"><span>Ordine</span><input type="number" id="s-order" inputmode="numeric" value="0"></label>
+        </div>
+        <div class="field-row">
+          <label class="check"><input type="checkbox" id="s-active" checked> Attiva</label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn primary">Salva strategia</button>
+          <button type="button" class="btn danger hidden" id="btn-delete-strategy">Elimina</button>
+          <button type="button" class="btn ghost" id="btn-cancel-strategy">Annulla</button>
+        </div>
+      </form>
+
+      <h3 class="sub-title">Fasce di quota</h3>
+      <div class="field-row">
+        <label class="field half"><span>Bassa fino a</span><input type="text" id="band-low" inputmode="decimal"></label>
+        <label class="field half"><span>Media fino a</span><input type="text" id="band-mid" inputmode="decimal"></label>
+      </div>
+      <p class="hint">Alta = tutto ciò che supera la soglia "media". Le analisi si ricalcolano retroattivamente.</p>
+      <button class="btn primary" id="btn-save-bands">Salva soglie</button>
+
+      <h3 class="sub-title">Backup</h3>
+      <button class="btn primary" id="btn-export-csv">Esporta CSV completo</button>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <nav class="tabbar">
+    <button class="tab active" data-view="nuova">➕<span>Nuova</span></button>
+    <button class="tab" data-view="pending">⏳<span>Pending</span></button>
+    <button class="tab" data-view="dashboard">📊<span>Dashboard</span></button>
+    <button class="tab" data-view="impostazioni">⚙️<span>Impostazioni</span></button>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
