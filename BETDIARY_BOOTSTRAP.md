@@ -233,8 +233,10 @@ Deploy: questo repo + GitHub Pages (Settings → Pages → deploy from branch `m
 
 - Quota e stake sempre con punto decimale nei dati; gli input devono accettare la virgola
   italiana e normalizzarla.
-- Mai committare la config Firebase nel repo (vive in localStorage; è comunque una chiave
-  pubblicabile, non un secret).
+- La config Firebase è client-side per design (non è un secret): è inclusa come default nel
+  codice (`DEFAULT_FIREBASE_CONFIG`), con override da localStorage per puntare a un altro
+  progetto. La protezione reale sono le regole Firestore; per sicurezza vera serve la fase 5
+  (auth con utenti). Non pubblicizzare l'URL dell'app.
 - Le soglie delle fasce sono configurazione, non schema.
 - Query Firestore senza indici compositi: range su un solo campo (`placed_at`) o uguaglianza
   singola (`result == "pending"`), ordinamento e filtri aggiuntivi client-side.
