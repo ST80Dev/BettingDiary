@@ -14,17 +14,35 @@ import {
 
 const SPORTS = ['calcio', 'tennis', 'basket', 'altro'];
 
-const MARKET_CODES = [
-  ['over_under', 'Over/Under'],
-  ['handicap_asiatico', 'Handicap asiatico'],
-  ['handicap_europeo', 'Handicap europeo'],
+// Tipi di giocata: categorie realmente distinte, ognuna con le sue sotto-scelte a pulsanti.
+const BET_TYPES = [
   ['1x2', '1X2'],
-  ['testa_a_testa', 'Testa a testa'],
-  ['gg_ng', 'Gol/NoGol'],
   ['doppia_chance', 'Doppia chance'],
-  ['dnb', 'Draw no bet'],
-  ['vincente_torneo', 'Vincente torneo'],
+  ['over_under', 'Over/Under'],
+  ['gg_ng', 'GG/NG'],
+  ['multigoal', 'Multigoal'],
+  ['pari_dispari', 'Pari/Dispari'],
   ['altro', 'Altro'],
+];
+const BET_TYPE_LABELS = Object.fromEntries(BET_TYPES);
+const SEL_TYPES = BET_TYPES.map(([v]) => v); // per mostrare/nascondere i blocchi
+
+// Sotto-scelte coerenti per tipo (tutte a pulsanti)
+const LIVE_OPTS = [['pre', 'Pre'], ['live', 'Live']];
+const PERIOD_OPTS = [['ft', 'Tutta la gara'], ['ht', '1° tempo']];
+const ONEX2_OPTS = [['1', '1'], ['X', 'X'], ['2', '2']];
+const DC_OPTS = [['1X', '1X'], ['12', '12'], ['X2', 'X2']];
+const GGNG_OPTS = [['GG', 'GG'], ['NG', 'NG']];
+const PARI_OPTS = [['pari', 'Pari'], ['dispari', 'Dispari']];
+const OUDIR_OPTS = [['over', 'Over +'], ['under', 'Under −']];
+
+// Linee gol più comuni, incluse le asiatiche a quarto (0.75 = 0.5/1, 1.25 = 1/1.5, ...)
+const OU_LINES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 3, 3.5];
+
+// Intervalli multigoal comuni
+const MULTIGOAL_RANGES = [
+  '1-2', '1-3', '1-4', '1-5', '1-6', '2-3', '2-4', '2-5', '2-6',
+  '3-4', '3-5', '3-6', '2+', '3+', '4+',
 ];
 
 const RESULT_LABELS = {
@@ -158,10 +176,9 @@ function toast(msg, undoFn = null) {
 
 // ---------------------------------------------------------------- firebase
 
-// Config di default del progetto BetDiary. Non è un secret: è client-side e la
-// protezione reale sono le regole Firestore (accesso solo autenticato). Un valore
-// salvato in localStorage dalle Impostazioni ha comunque la precedenza.
-const DEFAULT_FIREBASE_CONFIG = {
+// Config del progetto BetDiary. Non è un secret: è client-side e la protezione
+// reale sono le regole Firestore (accesso solo autenticato).
+const FIREBASE_CONFIG = {
   apiKey: 'AIzaSyCmEITxoRAIHl49GikG12Ntez7Zgv3KZj4',
   authDomain: 'betdiary-aaa34.firebaseapp.com',
   projectId: 'betdiary-aaa34',
@@ -170,28 +187,10 @@ const DEFAULT_FIREBASE_CONFIG = {
   appId: '1:947571323550:web:06720c7d437420b5cc018f',
 };
 
-function getFirebaseConfig() {
-  try {
-    const stored = JSON.parse(localStorage.getItem('bd_firebase_config'));
-    if (stored && stored.projectId) return stored;
-  } catch { /* ignora */ }
-  return DEFAULT_FIREBASE_CONFIG;
-}
-
-let lastFirebaseError = '';
-
 async function initFirebase() {
-  const cfg = getFirebaseConfig();
   const status = $('conn-status');
-  lastFirebaseError = '';
-  if (!cfg || !cfg.projectId) {
-    status.className = 'conn-status err';
-    status.title = 'Firebase non configurato';
-    lastFirebaseError = 'Config Firebase mancante.';
-    return false;
-  }
   try {
-    const app = initializeApp(cfg);
+    const app = initializeApp(FIREBASE_CONFIG);
     const auth = getAuth(app);
     await signInAnonymously(auth);
     db = getFirestore(app);
@@ -201,8 +200,7 @@ async function initFirebase() {
   } catch (err) {
     console.error('Init Firebase fallito', err);
     status.className = 'conn-status err';
-    status.title = 'Errore: ' + err.message;
-    lastFirebaseError = `${err.code || 'errore'}: ${err.message}`;
+    status.title = 'Errore: ' + (err.code || err.message);
     return false;
   }
 }
@@ -267,11 +265,108 @@ function fillSelect(sel, entries, { empty = null } = {}) {
 function initStaticSelects() {
   const sportEntries = SPORTS.map((s) => [s, s]);
   fillSelect($('f-sport'), sportEntries);
-  fillSelect($('f-marketcode'), MARKET_CODES, { empty: '—' });
   fillSelect($('s-sport'), sportEntries, { empty: '—' });
-  fillSelect($('s-marketcode'), MARKET_CODES, { empty: '—' });
   fillSelect($('fl-sport'), sportEntries, { empty: 'Tutti gli sport' });
-  fillSelect($('fl-marketcode'), MARKET_CODES, { empty: 'Tutti i mercati' });
+  fillSelect($('fl-marketcode'), BET_TYPES, { empty: 'Tutti i tipi' });
+  initMarketControls('f');
+  initMarketControls('s');
+}
+
+// ---------------------------------------------------------------- gruppi di pulsanti
+
+// Gruppo a selezione singola (segmented o chips). value '' = nessuno attivo.
+function buttonGroup(el, options, value, onchange) {
+  el.innerHTML = '';
+  el.dataset.value = value ?? '';
+  for (const [val, label] of options) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'seg-btn' + (val === el.dataset.value ? ' active' : '');
+    b.dataset.val = val;
+    b.textContent = label;
+    b.onclick = () => {
+      el.dataset.value = val;
+      [...el.children].forEach((c) => c.classList.toggle('active', c === b));
+      if (onchange) onchange(val);
+    };
+    el.appendChild(b);
+  }
+}
+
+function groupValue(el) { return el.dataset.value || ''; }
+
+function setGroupValue(el, value) {
+  el.dataset.value = value ?? '';
+  [...el.children].forEach((c) => c.classList.toggle('active', c.dataset.val === el.dataset.value));
+}
+
+// Etichetta linea gol con l'equivalente asiatico per i quarti
+function lineLabel(l) {
+  const q = Math.round((l % 0.5) * 100) / 100;
+  if (q === 0.25) return `${l} (${l - 0.25}/${l + 0.25})`;
+  return `${l}`;
+}
+
+// ---------------------------------------------------------------- controlli mercato (riusabili f- e s-)
+
+function initMarketControls(p) {
+  buttonGroup($(`${p}-live`), LIVE_OPTS, 'pre');
+  buttonGroup($(`${p}-period`), PERIOD_OPTS, 'ft');
+  buttonGroup($(`${p}-1x2`), ONEX2_OPTS, '');
+  buttonGroup($(`${p}-dc`), DC_OPTS, '');
+  buttonGroup($(`${p}-ggng`), GGNG_OPTS, '');
+  buttonGroup($(`${p}-pari`), PARI_OPTS, '');
+  buttonGroup($(`${p}-oudir`), OUDIR_OPTS, 'over');
+  buttonGroup($(`${p}-ouline`), OU_LINES.map((l) => [String(l), lineLabel(l)]), '');
+  buttonGroup($(`${p}-multigoal`), MULTIGOAL_RANGES.map((r) => [r, r]), '');
+  buttonGroup($(`${p}-type`), BET_TYPES, '', (type) => showSelBlock(p, type));
+  showSelBlock(p, '');
+}
+
+function showSelBlock(p, type) {
+  for (const t of SEL_TYPES) {
+    $(`${p}-sel-${t}`).classList.toggle('hidden', t !== type);
+  }
+}
+
+// Legge il mercato composto dai controlli con prefisso p
+function readMarket(p) {
+  const type = groupValue($(`${p}-type`));
+  const live = groupValue($(`${p}-live`)) === 'live';
+  const period = groupValue($(`${p}-period`)) || 'ft';
+  let selection = null;
+  let line = null;
+  let core = BET_TYPE_LABELS[type] || '';
+  if (type === '1x2') { selection = groupValue($(`${p}-1x2`)) || null; core = selection ? `1X2 ${selection}` : '1X2'; }
+  else if (type === 'doppia_chance') { selection = groupValue($(`${p}-dc`)) || null; core = selection ? `DC ${selection}` : 'Doppia chance'; }
+  else if (type === 'over_under') {
+    selection = groupValue($(`${p}-oudir`)) || 'over';
+    line = parseNum(groupValue($(`${p}-ouline`)));
+    core = `${selection === 'over' ? 'Over' : 'Under'}${line != null ? ' ' + line : ''}`;
+  } else if (type === 'gg_ng') { selection = groupValue($(`${p}-ggng`)) || null; core = selection || 'GG/NG'; }
+  else if (type === 'multigoal') { selection = groupValue($(`${p}-multigoal`)) || null; core = selection ? `Multigoal ${selection}` : 'Multigoal'; }
+  else if (type === 'pari_dispari') { selection = groupValue($(`${p}-pari`)) || null; core = selection === 'dispari' ? 'Dispari' : selection === 'pari' ? 'Pari' : 'Pari/Dispari'; }
+  else if (type === 'altro') { selection = $(`${p}-altro`).value.trim() || null; core = selection || 'Altro'; }
+
+  const ctx = [period === 'ht' ? '1T' : null, live ? 'Live' : null].filter(Boolean).join(' · ');
+  const market = type ? (ctx ? `${core} · ${ctx}` : core) : null;
+  return { market_code: type || null, selection, line, live, period, market };
+}
+
+// Imposta i controlli con prefisso p dai valori m
+function setMarket(p, m = {}) {
+  setGroupValue($(`${p}-live`), m.live ? 'live' : 'pre');
+  setGroupValue($(`${p}-period`), m.period || 'ft');
+  const type = m.market_code || '';
+  setGroupValue($(`${p}-type`), type);
+  showSelBlock(p, type);
+  setGroupValue($(`${p}-1x2`), type === '1x2' ? (m.selection || '') : '');
+  setGroupValue($(`${p}-dc`), type === 'doppia_chance' ? (m.selection || '') : '');
+  setGroupValue($(`${p}-ggng`), type === 'gg_ng' ? (m.selection || '') : '');
+  setGroupValue($(`${p}-pari`), type === 'pari_dispari' ? (m.selection || '') : '');
+  setGroupValue($(`${p}-oudir`), type === 'over_under' ? (m.selection || 'over') : 'over');
+  setGroupValue($(`${p}-ouline`), type === 'over_under' && m.line != null ? String(m.line) : '');
+  $(`${p}-altro`).value = type === 'altro' ? (m.selection || '') : '';
 }
 
 // ---------------------------------------------------------------- strategie
@@ -323,11 +418,15 @@ function applyPreset() {
   const s = strategies.find((x) => x.id === selectedStrategyId);
   if (!s) return;
   if (s.sport_default) $('f-sport').value = s.sport_default;
-  $('f-marketcode').value = s.market_code_default || '';
-  $('f-market').value = s.market_default || '';
-  $('f-line').value = s.line_default ?? '';
   $('f-stake').value = s.stake_default ?? '';
   $('f-minute').value = s.entry_minute_default ?? '';
+  setMarket('f', {
+    market_code: s.market_code_default,
+    selection: s.selection_default,
+    line: s.line_default,
+    live: s.live_default,
+    period: s.period_default,
+  });
 }
 
 // ---- CRUD strategie (impostazioni) ----
@@ -355,13 +454,17 @@ function openStrategyForm(id = null) {
   $('s-name').value = s.name || '';
   $('s-description').value = s.description || '';
   $('s-sport').value = s.sport_default || '';
-  $('s-marketcode').value = s.market_code_default || '';
-  $('s-market').value = s.market_default || '';
-  $('s-line').value = s.line_default ?? '';
   $('s-stake').value = s.stake_default ?? '';
   $('s-minute').value = s.entry_minute_default ?? '';
   $('s-order').value = s.sort_order ?? 0;
   $('s-active').checked = s.active !== false;
+  setMarket('s', {
+    market_code: s.market_code_default,
+    selection: s.selection_default,
+    line: s.line_default,
+    live: s.live_default,
+    period: s.period_default,
+  });
   $('btn-delete-strategy').classList.toggle('hidden', !id);
   $('strategy-form').classList.remove('hidden');
   $('strategy-form').scrollIntoView({ behavior: 'smooth' });
@@ -378,13 +481,17 @@ $('btn-cancel-strategy').addEventListener('click', closeStrategyForm);
 $('strategy-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!requireDb()) return;
+  const m = readMarket('s');
   const data = {
     name: $('s-name').value.trim(),
     description: $('s-description').value.trim(),
     sport_default: $('s-sport').value || null,
-    market_code_default: $('s-marketcode').value || null,
-    market_default: $('s-market').value.trim() || null,
-    line_default: parseNum($('s-line').value),
+    market_code_default: m.market_code,
+    selection_default: m.selection,
+    line_default: m.line,
+    live_default: m.live,
+    period_default: m.period,
+    market_default: m.market,           // testo composto, per l'etichetta del pulsante
     stake_default: parseNum($('s-stake').value),
     entry_minute_default: parseNum($('s-minute').value),
     sort_order: parseNum($('s-order').value) ?? 0,
@@ -431,6 +538,7 @@ function resetBetForm({ keepPreset = true } = {}) {
   $('bet-form').reset();
   $('f-placed').value = toDatetimeLocal(new Date());
   $('f-sport').value = 'calcio';
+  setMarket('f', {}); // riporta interruttori e tipo allo stato neutro
   if (keepPreset) applyPreset();
 }
 
@@ -442,27 +550,28 @@ $('bet-form').addEventListener('submit', async (e) => {
 
   const odds = parseNum($('f-odds').value);
   const stake = parseNum($('f-stake').value);
-  const event = $('f-event').value.trim();
-  if (!event) { toast('Inserisci l\'evento'); return; }
   if (!odds || odds <= 1) { toast('Quota non valida'); return; }
   if (!stake || stake <= 0) { toast('Stake non valido'); return; }
 
   const strategy = strategies.find((x) => x.id === selectedStrategyId) || null;
   const placed = $('f-placed').value ? new Date($('f-placed').value) : new Date();
+  const m = readMarket('f');
 
   const data = {
     placed_at: Timestamp.fromDate(placed),
     sport: $('f-sport').value || 'calcio',
-    event,
+    event: $('f-event').value.trim() || null,
     competition: $('f-competition').value.trim() || null,
-    market: $('f-market').value.trim() || $('f-marketcode').selectedOptions[0]?.textContent || 'n.d.',
-    market_code: $('f-marketcode').value || null,
-    line: parseNum($('f-line').value),
+    market: m.market || 'n.d.',
+    market_code: m.market_code,
+    selection: m.selection,
+    line: m.line,
+    live: m.live,
+    period: m.period,
     odds: Math.round(odds * 1000) / 1000,
     stake: Math.round(stake * 100) / 100,
     entry_minute: parseNum($('f-minute').value),
     score_at_entry: $('f-score').value.trim() || null,
-    notes: $('f-notes').value.trim() || null,
   };
 
   try {
@@ -507,7 +616,6 @@ function editBet(bet) {
   $('btn-save').textContent = 'Aggiorna giocata';
   $('btn-delete').classList.remove('hidden');
   $('btn-cancel-edit').classList.remove('hidden');
-  $('form-details').open = true;
   $('f-event').value = bet.event || '';
   $('f-competition').value = bet.competition || '';
   $('f-odds').value = bet.odds ?? '';
@@ -515,10 +623,7 @@ function editBet(bet) {
   $('f-minute').value = bet.entry_minute ?? '';
   $('f-score').value = bet.score_at_entry || '';
   $('f-sport').value = bet.sport || 'calcio';
-  $('f-marketcode').value = bet.market_code || '';
-  $('f-market').value = bet.market || '';
-  $('f-line').value = bet.line ?? '';
-  $('f-notes').value = bet.notes || '';
+  setMarket('f', bet);
   const d = toDate(bet.placed_at);
   $('f-placed').value = d ? toDatetimeLocal(d) : toDatetimeLocal(new Date());
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -550,14 +655,17 @@ async function refreshPending() {
 
 function betCardHtml(b) {
   const profitCls = b.profit > 0 ? 'pos' : b.profit < 0 ? 'neg' : 'zero';
+  const hasEvent = b.event && b.event.trim();
+  const title = hasEvent ? b.event : (b.market || 'Giocata');
   const info = [
-    b.strategy_name, b.sport, b.market,
+    b.strategy_name, b.sport,
+    title === b.market ? null : b.market,
     b.entry_minute != null ? `${b.entry_minute}'` : null,
     b.score_at_entry ? `[${b.score_at_entry}]` : null,
   ].filter(Boolean).join(' · ');
   return `
     <div class="row1">
-      <span class="event">${escapeHtml(b.event)}</span>
+      <span class="event">${escapeHtml(title)}</span>
       <span>@${(b.odds ?? 0).toFixed(2)} × ${(b.stake ?? 0).toFixed(2)}€</span>
     </div>
     <div class="row2">
@@ -801,44 +909,6 @@ function renderMinutesTable(settled) {
 
 // ---------------------------------------------------------------- impostazioni
 
-// Accetta sia JSON puro sia il frammento JS copiato dalla console Firebase
-// ("const firebaseConfig = { apiKey: '...', ... };"), incluse le righe di import.
-function parseFirebaseConfigInput(raw) {
-  const s = raw.trim();
-  try { return JSON.parse(s); } catch { /* prova a estrarre l'oggetto */ }
-  // Isola l'oggetto giusto: quello assegnato a firebaseConfig, o il primo che
-  // contiene apiKey. Evita di agganciare la graffa di "import { ... }".
-  let obj = null;
-  const assign = s.match(/firebaseConfig\s*=\s*(\{[\s\S]*?\})/);
-  if (assign) {
-    obj = assign[1];
-  } else {
-    const withKey = s.match(/\{[^{}]*\bapiKey\b[\s\S]*?\}/);
-    if (withKey) obj = withKey[0];
-    else {
-      const any = s.match(/\{[\s\S]*\}/);
-      if (any) obj = any[0];
-    }
-  }
-  if (!obj) return null;
-  const j = obj.replace(/'/g, '"')
-    .replace(/([{,]\s*)([A-Za-z_$][\w$]*)\s*:/g, '$1"$2":')
-    .replace(/,\s*}/g, '}');
-  try { return JSON.parse(j); } catch { return null; }
-}
-
-$('btn-save-config').addEventListener('click', async () => {
-  const cfg = parseFirebaseConfigInput($('cfg-firebase').value);
-  if (!cfg) { $('cfg-status').textContent = 'Config non riconosciuta: incolla il frammento firebaseConfig copiato dalla console.'; return; }
-  if (!cfg.projectId || !cfg.apiKey) {
-    $('cfg-status').textContent = 'Config incompleta: servono almeno apiKey e projectId.';
-    return;
-  }
-  localStorage.setItem('bd_firebase_config', JSON.stringify(cfg));
-  $('cfg-status').textContent = 'Salvata. Ricarico…';
-  location.reload();
-});
-
 $('btn-save-bands').addEventListener('click', async () => {
   if (!requireDb()) return;
   const low = parseNum($('band-low').value);
@@ -859,8 +929,8 @@ $('btn-export-csv').addEventListener('click', async () => {
   try {
     const snap = await getDocs(query(collection(db, 'bets'), orderBy('placed_at', 'asc')));
     const cols = ['placed_at', 'strategy_name', 'sport', 'event', 'competition', 'market',
-      'market_code', 'line', 'odds', 'stake', 'entry_minute', 'score_at_entry',
-      'result', 'profit', 'notes'];
+      'market_code', 'selection', 'line', 'live', 'period', 'odds', 'stake',
+      'entry_minute', 'score_at_entry', 'result', 'profit', 'notes'];
     const esc = (v) => {
       if (v === null || v === undefined) return '';
       const s = String(v);
@@ -895,18 +965,12 @@ $('btn-export-csv').addEventListener('click', async () => {
 async function main() {
   initStaticSelects();
   resetBetForm({ keepPreset: false });
-  const cfg = getFirebaseConfig();
-  if (cfg) $('cfg-firebase').value = JSON.stringify(cfg, null, 2);
 
   const ok = await initFirebase();
   if (!ok) {
-    $('cfg-status').textContent = 'Non connesso — ' + (lastFirebaseError || 'causa sconosciuta.');
-    $('cfg-status').style.color = 'var(--red)';
-    switchView('impostazioni');
+    toast('Connessione a Firebase fallita — riprova più tardi');
     return;
   }
-  $('cfg-status').style.color = '';
-  $('cfg-status').textContent = `Connesso al progetto "${cfg.projectId}".`;
   await loadBands();
   await loadStrategies();
   applyPreset();

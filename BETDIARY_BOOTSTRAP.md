@@ -67,9 +67,12 @@ Principi di design (non negoziabili):
   name: "TuttoHT 2.1 HFav_30' +0.5HT",   // string, obbligatorio
   description: "",                        // string
   sport_default: "calcio",                // string | null (null = trasversale)
-  market_code_default: "over_under",      // string | null (vocabolario sotto)
-  market_default: "Over 0.5 1T (asiatico)", // string | null, testo libero
-  line_default: 0.5,                      // number | null
+  market_code_default: "over_under",      // tipo giocata (vocabolario sotto)
+  selection_default: "over",              // sotto-scelta coerente col tipo
+  line_default: 0.5,                      // number | null (solo over_under)
+  live_default: true,                     // boolean (live vs pre-evento)
+  period_default: "ht",                   // "ht" | "ft" (1° tempo / tutta la gara)
+  market_default: "Over 0.5 · 1T · Live", // testo composto, per l'etichetta del pulsante
   stake_default: 10,                      // number | null
   entry_minute_default: 30,               // number | null (strategie live)
   sort_order: 0,                          // number, ordinamento pulsanti in home
@@ -87,18 +90,20 @@ Principi di design (non negoziabili):
   strategy_id: "abc123" | null,  // id documento strategia
   strategy_name: "TuttoHT 2.1",  // denormalizzato per dashboard/CSV senza join
   sport: "calcio",               // obbligatorio
-  event: "Ajax - Heerenveen",    // obbligatorio
+  event: "Ajax - Heerenveen" | null, // FACOLTATIVO
   competition: "Eredivisie" | null,
-  market: "Over 0.5 1T (asiatico)", // obbligatorio, descrizione leggibile
-  market_code: "over_under" | null, // vocabolario sotto
-  line: 0.5 | null,              // linea numerica (gol/game/punti secondo lo sport)
+  market: "Over 0.5 · 1T · Live", // descrizione leggibile, composta dai controlli
+  market_code: "over_under" | null, // tipo giocata (vocabolario sotto)
+  selection: "over" | null,      // sotto-scelta coerente col tipo (1/X/2, GG, 2-4, over…)
+  line: 0.5 | null,              // linea gol numerica (solo over_under)
+  live: true,                    // boolean (live vs pre-evento)
+  period: "ht",                  // "ht" | "ft" (1° tempo / tutta la gara)
   odds: 1.88,                    // obbligatorio, punto decimale
   stake: 10,                     // obbligatorio
   entry_minute: 32 | null,       // minuto reale d'ingresso (live)
   score_at_entry: "0-0" | null,  // punteggio al momento della giocata
   result: "pending",             // pending|win|loss|void|half_win|half_loss
-  profit: null | number,         // calcolato al saldo (formule §4)
-  notes: "" 
+  profit: null | number          // calcolato al saldo (formule §4)
 }
 ```
 
@@ -128,15 +133,25 @@ service cloud.firestore {
 }
 ```
 
-### Vocabolario `market_code`
+### Tipo giocata (`market_code`) e sotto-scelte coerenti
 
-Testo libero nel DB, ma l'app propone e usa solo questo vocabolario:
+Inserimento **ad albero, tutto a pulsanti** (obiettivo <10s): si sceglie il tipo e compaiono
+solo le sotto-scelte pertinenti (niente linea gol se è 1X2, ecc.). Tipi e relative
+sotto-scelte (`selection`):
 
-`over_under` · `handicap_asiatico` · `handicap_europeo` · `1x2` · `testa_a_testa` ·
-`gg_ng` · `doppia_chance` · `dnb` · `vincente_torneo` · `altro`
+- `1x2` → `1` / `X` / `2`
+- `doppia_chance` → `1X` / `12` / `X2`
+- `over_under` → direzione (`over` / `under`) + `line` gol a pulsanti, incluse le asiatiche a
+  quarto (0.75 = 0.5/1, 1.25 = 1/1.5, …)
+- `gg_ng` → `GG` / `NG`
+- `multigoal` → intervallo (`1-2`, `1-3`, … `2-4`, … `2+`, `3+`, `4+`)
+- `pari_dispari` → `pari` / `dispari`
+- `altro` → testo libero (per tennis/basket o mercati non elencati)
 
-Serve alla dashboard per aggregare tra sport diversi; il campo `market` testuale resta la
-descrizione leggibile della giocata.
+Ortogonali al tipo: due interruttori `live` (live / pre-evento) e `period` (1° tempo / tutta
+la gara). Il campo `market` testuale è composto automaticamente (es. "Over 0.5 · 1T · Live")
+e resta la descrizione leggibile; `market_code` serve alla dashboard per aggregare per tipo.
+L'elenco dei tipi è facilmente estendibile in `BET_TYPES` (app.js) senza migration.
 
 ### Sport
 
@@ -167,11 +182,14 @@ half_loss = 0 vinte su peso 0.5, void esclusa.
 
 - Griglia di pulsanti grandi con le strategie attive (ordinate per `sort_order`); in evidenza
   l'ultima usata (ricordata in localStorage).
-- Tap su una strategia → form precompilato con tutti i default del preset.
-- Campi **sempre manuali** a ogni giocata: **evento, quota, stake, minuto reale d'ingresso,
-  punteggio al momento** (numpad decimale per quota/stake, minuto pre-valorizzato col
-  default del preset).
-- Tutti gli altri campi restano editabili inline per i ritocchi occasionali.
+- Tap su una strategia → form precompilato con tutti i default del preset (tipo, sotto-scelta,
+  interruttori live/durata, stake, minuto).
+- Mercato **ad albero, tutto a pulsanti**: tipo → solo le sotto-scelte pertinenti (vedi §3).
+  Niente menu a discesa nel flusso rapido.
+- Campi tipicamente ritoccati a ogni giocata: **quota, stake, minuto reale, punteggio**
+  (numpad decimale per quota/stake). **Evento facoltativo**: se assente, in lista compare il
+  mercato come titolo.
+- `sport` e data/ora in "Altri campi" (collassato), editabili al bisogno.
 - `placed_at` = adesso di default, modificabile per inserimenti a posteriori.
 - "Salva" → insert → toast di conferma → form pronto per la giocata successiva con lo stesso
   preset selezionato.
@@ -204,7 +222,7 @@ Grafici: Chart.js da CDN.
 
 ### 5.4 Impostazioni
 
-- Config Firebase (JSON incollato → localStorage) con stato connessione.
+- (La config Firebase è nel codice, `FIREBASE_CONFIG`; lo stato connessione è il pallino in alto.)
 - Gestione strategie (CRUD completo dei preset, incluso l'ordinamento).
 - Soglie fasce di quota (scrive su `settings/odds_bands`).
 - Export CSV completo (backup).
@@ -233,10 +251,9 @@ Deploy: questo repo + GitHub Pages (Settings → Pages → deploy from branch `m
 
 - Quota e stake sempre con punto decimale nei dati; gli input devono accettare la virgola
   italiana e normalizzarla.
-- La config Firebase è client-side per design (non è un secret): è inclusa come default nel
-  codice (`DEFAULT_FIREBASE_CONFIG`), con override da localStorage per puntare a un altro
-  progetto. La protezione reale sono le regole Firestore; per sicurezza vera serve la fase 5
-  (auth con utenti). Non pubblicizzare l'URL dell'app.
+- La config Firebase è client-side per design (non è un secret): è inclusa nel codice
+  (`FIREBASE_CONFIG` in `app.js`). La protezione reale sono le regole Firestore; per sicurezza
+  vera serve la fase 5 (auth con utenti). Non pubblicizzare l'URL dell'app.
 - Le soglie delle fasce sono configurazione, non schema.
 - Query Firestore senza indici compositi: range su un solo campo (`placed_at`) o uguaglianza
   singola (`result == "pending"`), ordinamento e filtri aggiuntivi client-side.

@@ -32,14 +32,11 @@ di progetto completo.
 
 ### 2. Configura l'app
 
-La config del progetto è già inclusa nel codice (`DEFAULT_FIREBASE_CONFIG` in `app.js`):
-l'app si connette da sola, non serve incollare nulla. La config Firebase non è un secret —
-è client-side per design e la protezione reale sono le regole Firestore.
+La config del progetto è inclusa nel codice (`FIREBASE_CONFIG` in `app.js`): l'app si
+connette da sola, non serve incollare nulla. La config Firebase non è un secret — è
+client-side per design e la protezione reale sono le regole Firestore.
 
-Per puntare a un progetto diverso (es. da un altro dispositivo) apri **Impostazioni** →
-incolla il `firebaseConfig` → *Salva e connetti*: quel valore, salvato in localStorage,
-ha la precedenza sul default. Puoi incollare il frammento JavaScript copiato dalla console
-così com'è, incluse le righe di `import`: l'app estrae da solo l'oggetto `firebaseConfig`.
+Per puntare a un progetto diverso basta modificare `FIREBASE_CONFIG` in `app.js`.
 
 ### 3. GitHub Pages
 

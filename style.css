@@ -39,7 +39,6 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 17px;
   line-height: 1.45;
-  padding-bottom: 84px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -59,7 +58,7 @@ body {
 .conn-status.ok { color: #b6ffe0; }
 .conn-status.err { color: #ffd0d7; }
 
-#main { padding: 16px 16px 40px; max-width: 780px; margin: 0 auto; }
+#main { padding: 16px 16px calc(108px + env(safe-area-inset-bottom)); max-width: 780px; margin: 0 auto; }
 
 .view-title { font-size: 1.35rem; font-weight: 800; margin: 16px 0 12px; letter-spacing: -0.01em; }
 .sub-title {
@@ -102,6 +101,34 @@ form { display: block; }
 .field.twothird { flex: 2; }
 .check { display: flex; align-items: center; gap: 10px; font-size: 1rem; font-weight: 600; }
 .check input { width: 22px; height: 22px; }
+
+/* ---- gruppi di pulsanti (segmented / chips, scelta ad albero) ---- */
+.field-group { margin-bottom: 14px; }
+.field-label {
+  display: block; font-size: 0.82rem; color: var(--muted); font-weight: 600; margin-bottom: 6px;
+}
+.segmented { display: flex; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.seg-btn {
+  flex: 1; min-width: 56px; padding: 13px 12px; border: 2px solid var(--border);
+  background: var(--bg2); color: var(--muted); border-radius: 12px;
+  font-size: 1.02rem; font-weight: 700; cursor: pointer; text-align: center;
+  transition: transform 0.1s ease, border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+.chips .seg-btn { flex: 0 1 auto; min-width: 52px; }
+.seg-btn.active {
+  border-color: var(--accent); background: var(--accent-soft); color: var(--accent);
+  box-shadow: 0 4px 12px rgba(79, 124, 255, 0.18);
+}
+.seg-btn:active { transform: scale(0.95); }
+.sel-block {
+  margin-bottom: 14px; padding: 12px; border-radius: 14px;
+  background: var(--bg3); border: 1px solid var(--border);
+}
+.sel-block .field-label { margin-top: 4px; }
+.sel-block .field-label:first-child { margin-top: 0; }
+.sel-block.field-row { display: flex; }
+.sel-block.field-row.hidden { display: none; }
 
 input, select, textarea {
   background: var(--bg2); border: 2px solid var(--border); color: var(--text);
