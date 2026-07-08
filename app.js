@@ -36,8 +36,13 @@ const GGNG_OPTS = [['GG', 'GG'], ['NG', 'NG']];
 const PARI_OPTS = [['pari', 'Pari'], ['dispari', 'Dispari']];
 const OUDIR_OPTS = [['over', 'Over +'], ['under', 'Under −']];
 
-// Linee gol più comuni, incluse le asiatiche a quarto (0.75 = 0.5/1, 1.25 = 1/1.5, ...)
-const OU_LINES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 3, 3.5];
+// Tipo di linea Over/Under: normale (intere/mezze) o asiatica (a quarto).
+const OUTYPE_OPTS = [['normale', 'Normale'], ['asiatica', 'Asiatica']];
+// Linee normali: intere e mezze.
+const OU_LINES_NORMAL = [0.5, 1, 1.5, 2, 2.5, 3, 3.5];
+// Linee asiatiche a quarto (0.75 = 0.5/1, 1.25 = 1/1.5, ...).
+const OU_LINES_ASIAN = [0.25, 0.75, 1.25, 1.75, 2.25, 2.75, 3.25];
+function ouLinesFor(type) { return type === 'asiatica' ? OU_LINES_ASIAN : OU_LINES_NORMAL; }
 
 // Intervalli multigoal comuni
 const MULTIGOAL_RANGES = [
@@ -317,7 +322,8 @@ function initMarketControls(p) {
   buttonGroup($(`${p}-ggng`), GGNG_OPTS, '');
   buttonGroup($(`${p}-pari`), PARI_OPTS, '');
   buttonGroup($(`${p}-oudir`), OUDIR_OPTS, 'over');
-  buttonGroup($(`${p}-ouline`), OU_LINES.map((l) => [String(l), lineLabel(l)]), '');
+  buttonGroup($(`${p}-outype`), OUTYPE_OPTS, 'normale', () => renderOuLines(p));
+  renderOuLines(p);
   buttonGroup($(`${p}-multigoal`), MULTIGOAL_RANGES.map((r) => [r, r]), '');
   buttonGroup($(`${p}-type`), BET_TYPES, '', (type) => showSelBlock(p, type));
   showSelBlock(p, '');
@@ -329,6 +335,15 @@ function showSelBlock(p, type) {
   }
 }
 
+// Ricostruisce le linee gol in base al tipo (normale/asiatica), mantenendo la scelta se ancora valida.
+function renderOuLines(p) {
+  const type = groupValue($(`${p}-outype`)) || 'normale';
+  const lines = ouLinesFor(type);
+  const cur = groupValue($(`${p}-ouline`));
+  const keep = lines.map(String).includes(cur) ? cur : '';
+  buttonGroup($(`${p}-ouline`), lines.map((l) => [String(l), lineLabel(l)]), keep);
+}
+
 // Legge il mercato composto dai controlli con prefisso p
 function readMarket(p) {
   const type = groupValue($(`${p}-type`));
@@ -336,13 +351,15 @@ function readMarket(p) {
   const period = groupValue($(`${p}-period`)) || 'ft';
   let selection = null;
   let line = null;
+  let lineType = null;
   let core = BET_TYPE_LABELS[type] || '';
   if (type === '1x2') { selection = groupValue($(`${p}-1x2`)) || null; core = selection ? `1X2 ${selection}` : '1X2'; }
   else if (type === 'doppia_chance') { selection = groupValue($(`${p}-dc`)) || null; core = selection ? `DC ${selection}` : 'Doppia chance'; }
   else if (type === 'over_under') {
     selection = groupValue($(`${p}-oudir`)) || 'over';
     line = parseNum(groupValue($(`${p}-ouline`)));
-    core = `${selection === 'over' ? 'Over' : 'Under'}${line != null ? ' ' + line : ''}`;
+    lineType = groupValue($(`${p}-outype`)) || 'normale';
+    core = `${selection === 'over' ? 'Over' : 'Under'}${line != null ? ' ' + line : ''}${lineType === 'asiatica' ? ' asiatica' : ''}`;
   } else if (type === 'gg_ng') { selection = groupValue($(`${p}-ggng`)) || null; core = selection || 'GG/NG'; }
   else if (type === 'multigoal') { selection = groupValue($(`${p}-multigoal`)) || null; core = selection ? `Multigoal ${selection}` : 'Multigoal'; }
   else if (type === 'pari_dispari') { selection = groupValue($(`${p}-pari`)) || null; core = selection === 'dispari' ? 'Dispari' : selection === 'pari' ? 'Pari' : 'Pari/Dispari'; }
@@ -350,7 +367,7 @@ function readMarket(p) {
 
   const ctx = [period === 'ht' ? '1T' : null, live ? 'Live' : null].filter(Boolean).join(' · ');
   const market = type ? (ctx ? `${core} · ${ctx}` : core) : null;
-  return { market_code: type || null, selection, line, live, period, market };
+  return { market_code: type || null, selection, line, line_type: lineType, live, period, market };
 }
 
 // Imposta i controlli con prefisso p dai valori m
@@ -365,6 +382,8 @@ function setMarket(p, m = {}) {
   setGroupValue($(`${p}-ggng`), type === 'gg_ng' ? (m.selection || '') : '');
   setGroupValue($(`${p}-pari`), type === 'pari_dispari' ? (m.selection || '') : '');
   setGroupValue($(`${p}-oudir`), type === 'over_under' ? (m.selection || 'over') : 'over');
+  setGroupValue($(`${p}-outype`), type === 'over_under' ? (m.line_type || 'normale') : 'normale');
+  renderOuLines(p);
   setGroupValue($(`${p}-ouline`), type === 'over_under' && m.line != null ? String(m.line) : '');
   $(`${p}-altro`).value = type === 'altro' ? (m.selection || '') : '';
 }
@@ -424,6 +443,7 @@ function applyPreset() {
     market_code: s.market_code_default,
     selection: s.selection_default,
     line: s.line_default,
+    line_type: s.line_type_default,
     live: s.live_default,
     period: s.period_default,
   });
@@ -462,6 +482,7 @@ function openStrategyForm(id = null) {
     market_code: s.market_code_default,
     selection: s.selection_default,
     line: s.line_default,
+    line_type: s.line_type_default,
     live: s.live_default,
     period: s.period_default,
   });
@@ -489,6 +510,7 @@ $('strategy-form').addEventListener('submit', async (e) => {
     market_code_default: m.market_code,
     selection_default: m.selection,
     line_default: m.line,
+    line_type_default: m.line_type,
     live_default: m.live,
     period_default: m.period,
     market_default: m.market,           // testo composto, per l'etichetta del pulsante
@@ -566,6 +588,7 @@ $('bet-form').addEventListener('submit', async (e) => {
     market_code: m.market_code,
     selection: m.selection,
     line: m.line,
+    line_type: m.line_type,
     live: m.live,
     period: m.period,
     odds: Math.round(odds * 1000) / 1000,
@@ -929,7 +952,7 @@ $('btn-export-csv').addEventListener('click', async () => {
   try {
     const snap = await getDocs(query(collection(db, 'bets'), orderBy('placed_at', 'asc')));
     const cols = ['placed_at', 'strategy_name', 'sport', 'event', 'competition', 'market',
-      'market_code', 'selection', 'line', 'live', 'period', 'odds', 'stake',
+      'market_code', 'selection', 'line', 'line_type', 'live', 'period', 'odds', 'stake',
       'entry_minute', 'score_at_entry', 'result', 'profit', 'notes'];
     const esc = (v) => {
       if (v === null || v === undefined) return '';
