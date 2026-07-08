@@ -158,10 +158,9 @@ function toast(msg, undoFn = null) {
 
 // ---------------------------------------------------------------- firebase
 
-// Config di default del progetto BetDiary. Non è un secret: è client-side e la
-// protezione reale sono le regole Firestore (accesso solo autenticato). Un valore
-// salvato in localStorage dalle Impostazioni ha comunque la precedenza.
-const DEFAULT_FIREBASE_CONFIG = {
+// Config del progetto BetDiary. Non è un secret: è client-side e la protezione
+// reale sono le regole Firestore (accesso solo autenticato).
+const FIREBASE_CONFIG = {
   apiKey: 'AIzaSyCmEITxoRAIHl49GikG12Ntez7Zgv3KZj4',
   authDomain: 'betdiary-aaa34.firebaseapp.com',
   projectId: 'betdiary-aaa34',
@@ -170,28 +169,10 @@ const DEFAULT_FIREBASE_CONFIG = {
   appId: '1:947571323550:web:06720c7d437420b5cc018f',
 };
 
-function getFirebaseConfig() {
-  try {
-    const stored = JSON.parse(localStorage.getItem('bd_firebase_config'));
-    if (stored && stored.projectId) return stored;
-  } catch { /* ignora */ }
-  return DEFAULT_FIREBASE_CONFIG;
-}
-
-let lastFirebaseError = '';
-
 async function initFirebase() {
-  const cfg = getFirebaseConfig();
   const status = $('conn-status');
-  lastFirebaseError = '';
-  if (!cfg || !cfg.projectId) {
-    status.className = 'conn-status err';
-    status.title = 'Firebase non configurato';
-    lastFirebaseError = 'Config Firebase mancante.';
-    return false;
-  }
   try {
-    const app = initializeApp(cfg);
+    const app = initializeApp(FIREBASE_CONFIG);
     const auth = getAuth(app);
     await signInAnonymously(auth);
     db = getFirestore(app);
@@ -201,8 +182,7 @@ async function initFirebase() {
   } catch (err) {
     console.error('Init Firebase fallito', err);
     status.className = 'conn-status err';
-    status.title = 'Errore: ' + err.message;
-    lastFirebaseError = `${err.code || 'errore'}: ${err.message}`;
+    status.title = 'Errore: ' + (err.code || err.message);
     return false;
   }
 }
@@ -801,44 +781,6 @@ function renderMinutesTable(settled) {
 
 // ---------------------------------------------------------------- impostazioni
 
-// Accetta sia JSON puro sia il frammento JS copiato dalla console Firebase
-// ("const firebaseConfig = { apiKey: '...', ... };"), incluse le righe di import.
-function parseFirebaseConfigInput(raw) {
-  const s = raw.trim();
-  try { return JSON.parse(s); } catch { /* prova a estrarre l'oggetto */ }
-  // Isola l'oggetto giusto: quello assegnato a firebaseConfig, o il primo che
-  // contiene apiKey. Evita di agganciare la graffa di "import { ... }".
-  let obj = null;
-  const assign = s.match(/firebaseConfig\s*=\s*(\{[\s\S]*?\})/);
-  if (assign) {
-    obj = assign[1];
-  } else {
-    const withKey = s.match(/\{[^{}]*\bapiKey\b[\s\S]*?\}/);
-    if (withKey) obj = withKey[0];
-    else {
-      const any = s.match(/\{[\s\S]*\}/);
-      if (any) obj = any[0];
-    }
-  }
-  if (!obj) return null;
-  const j = obj.replace(/'/g, '"')
-    .replace(/([{,]\s*)([A-Za-z_$][\w$]*)\s*:/g, '$1"$2":')
-    .replace(/,\s*}/g, '}');
-  try { return JSON.parse(j); } catch { return null; }
-}
-
-$('btn-save-config').addEventListener('click', async () => {
-  const cfg = parseFirebaseConfigInput($('cfg-firebase').value);
-  if (!cfg) { $('cfg-status').textContent = 'Config non riconosciuta: incolla il frammento firebaseConfig copiato dalla console.'; return; }
-  if (!cfg.projectId || !cfg.apiKey) {
-    $('cfg-status').textContent = 'Config incompleta: servono almeno apiKey e projectId.';
-    return;
-  }
-  localStorage.setItem('bd_firebase_config', JSON.stringify(cfg));
-  $('cfg-status').textContent = 'Salvata. Ricarico…';
-  location.reload();
-});
-
 $('btn-save-bands').addEventListener('click', async () => {
   if (!requireDb()) return;
   const low = parseNum($('band-low').value);
@@ -895,18 +837,12 @@ $('btn-export-csv').addEventListener('click', async () => {
 async function main() {
   initStaticSelects();
   resetBetForm({ keepPreset: false });
-  const cfg = getFirebaseConfig();
-  if (cfg) $('cfg-firebase').value = JSON.stringify(cfg, null, 2);
 
   const ok = await initFirebase();
   if (!ok) {
-    $('cfg-status').textContent = 'Non connesso — ' + (lastFirebaseError || 'causa sconosciuta.');
-    $('cfg-status').style.color = 'var(--red)';
-    switchView('impostazioni');
+    toast('Connessione a Firebase fallita — riprova più tardi');
     return;
   }
-  $('cfg-status').style.color = '';
-  $('cfg-status').textContent = `Connesso al progetto "${cfg.projectId}".`;
   await loadBands();
   await loadStrategies();
   applyPreset();

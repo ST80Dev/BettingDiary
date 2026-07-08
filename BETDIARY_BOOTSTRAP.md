@@ -204,7 +204,7 @@ Grafici: Chart.js da CDN.
 
 ### 5.4 Impostazioni
 
-- Config Firebase (JSON incollato → localStorage) con stato connessione.
+- (La config Firebase è nel codice, `FIREBASE_CONFIG`; lo stato connessione è il pallino in alto.)
 - Gestione strategie (CRUD completo dei preset, incluso l'ordinamento).
 - Soglie fasce di quota (scrive su `settings/odds_bands`).
 - Export CSV completo (backup).
@@ -233,10 +233,9 @@ Deploy: questo repo + GitHub Pages (Settings → Pages → deploy from branch `m
 
 - Quota e stake sempre con punto decimale nei dati; gli input devono accettare la virgola
   italiana e normalizzarla.
-- La config Firebase è client-side per design (non è un secret): è inclusa come default nel
-  codice (`DEFAULT_FIREBASE_CONFIG`), con override da localStorage per puntare a un altro
-  progetto. La protezione reale sono le regole Firestore; per sicurezza vera serve la fase 5
-  (auth con utenti). Non pubblicizzare l'URL dell'app.
+- La config Firebase è client-side per design (non è un secret): è inclusa nel codice
+  (`FIREBASE_CONFIG` in `app.js`). La protezione reale sono le regole Firestore; per sicurezza
+  vera serve la fase 5 (auth con utenti). Non pubblicizzare l'URL dell'app.
 - Le soglie delle fasce sono configurazione, non schema.
 - Query Firestore senza indici compositi: range su un solo campo (`placed_at`) o uguaglianza
   singola (`result == "pending"`), ordinamento e filtri aggiuntivi client-side.
