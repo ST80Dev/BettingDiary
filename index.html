@@ -79,6 +79,7 @@
         </div>
         <div class="sel-block hidden" id="f-sel-over_under">
           <span class="field-label">Direzione</span><div class="segmented" id="f-oudir"></div>
+          <span class="field-label">Tipo linea</span><div class="segmented" id="f-outype"></div>
           <span class="field-label">Linea gol</span><div class="chips" id="f-ouline"></div>
         </div>
         <div class="sel-block hidden" id="f-sel-gg_ng">
@@ -92,6 +93,14 @@
         </div>
         <div class="sel-block hidden field-row" id="f-sel-altro">
           <label class="field grow"><span>Descrizione giocata</span><input type="text" id="f-altro" placeholder="es. Under 3.5 casa"></label>
+        </div>
+
+        <!-- esito contestuale: consente di segnare subito il risultato in fase di inserimento.
+             Le mezze vincite/perdite compaiono solo sulle giocate asiatiche (linee a quarto). -->
+        <div class="field-group" id="f-result-group">
+          <span class="field-label">Esito <small class="result-hint">(opzionale — lascia “Pending” per saldare dopo)</small></span>
+          <div class="chips results" id="f-result"></div>
+          <div id="f-result-profit" class="result-profit hidden"></div>
         </div>
 
         <details id="form-details">
@@ -147,6 +156,8 @@
         <select id="fl-marketcode"><option value="">Tutti i tipi</option></select>
       </div>
 
+      <div id="cassa-card" class="cassa-card"></div>
+
       <div id="kpi-cards" class="kpi-cards"></div>
 
       <div class="chart-box"><canvas id="chart-bankroll"></canvas></div>
@@ -198,6 +209,7 @@
         </div>
         <div class="sel-block hidden" id="s-sel-over_under">
           <span class="field-label">Direzione</span><div class="segmented" id="s-oudir"></div>
+          <span class="field-label">Tipo linea</span><div class="segmented" id="s-outype"></div>
           <span class="field-label">Linea gol</span><div class="chips" id="s-ouline"></div>
         </div>
         <div class="sel-block hidden" id="s-sel-gg_ng">
@@ -227,6 +239,29 @@
         </div>
       </form>
 
+      <h3 class="sub-title">Cassa (versamenti)</h3>
+      <p class="hint">Registra i versamenti (e prelievi) fatti sul bookmaker, anche in date passate.
+        Sono <strong>capitale</strong>: entrano nella <em>cassa attuale</em> ma non nei conteggi di
+        ROI e vincite, che restano calcolati solo sul giocato.</p>
+      <div class="cassa-total-row">Totale versato netto: <strong id="deposit-total">0.00 €</strong></div>
+      <form id="deposit-form" autocomplete="off">
+        <div class="field-group">
+          <span class="field-label">Tipo movimento</span>
+          <div class="segmented" id="dep-type"></div>
+        </div>
+        <div class="field-row">
+          <label class="field half"><span>Importo € *</span><input type="text" id="dep-amount" inputmode="decimal" placeholder="100" required></label>
+          <label class="field half"><span>Data/ora</span><input type="datetime-local" id="dep-date"></label>
+        </div>
+        <div class="field-row">
+          <label class="field grow"><span>Nota</span><input type="text" id="dep-note" placeholder="(opzionale) es. versamento iniziale"></label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn primary">Aggiungi movimento</button>
+        </div>
+      </form>
+      <div id="deposit-list" class="deposit-list"></div>
+
       <h3 class="sub-title">Fasce di quota</h3>
       <div class="field-row">
         <label class="field half"><span>Bassa fino a</span><input type="text" id="band-low" inputmode="decimal"></label>
@@ -236,7 +271,10 @@
       <button class="btn primary" id="btn-save-bands">Salva soglie</button>
 
       <h3 class="sub-title">Backup</h3>
-      <button class="btn primary" id="btn-export-csv">Esporta CSV completo</button>
+      <div class="form-actions">
+        <button class="btn primary" id="btn-export-csv">Esporta giocate CSV</button>
+        <button class="btn ghost" id="btn-export-cassa">Esporta cassa CSV</button>
+      </div>
     </section>
   </main>
 

@@ -47,7 +47,14 @@ L'app sarà su `https://st80dev.github.io/BettingDiary/`.
 
 1. **Impostazioni → Strategie**: crea i tuoi preset (sport, mercato, linea, stake, minuto tipico).
 2. **Nuova**: tap sul preset → digiti evento, quota, stake, minuto reale e punteggio → *Salva*.
+   Puoi anche segnare subito l'**Esito** nel form (Win / Void / Loss, più ½ Win / ½ Loss sulle
+   giocate asiatiche): il profit si calcola da solo e la giocata parte già saldata. Lascia
+   *Pending* per saldarla dopo.
 3. **Pending**: a fine match, tap su W / ½W / V / ½L / L — il profit si calcola da solo.
 4. **Dashboard**: filtri per periodo/strategia/sport/mercato; fasce di quota configurabili
-   dalle Impostazioni.
-5. **Impostazioni → Backup**: export CSV completo.
+   dalle Impostazioni. In cima, la **Cassa attuale** = versamenti netti + profit realizzato
+   sul giocato (mostra anche quanto hai *in gioco* sulle pending).
+5. **Impostazioni → Cassa**: registra i versamenti/prelievi fatti sul bookmaker, anche in date
+   passate. Sono capitale: entrano nella cassa attuale ma **non** nei conteggi di ROI e vincite,
+   che restano calcolati solo sulle giocate.
+6. **Impostazioni → Backup**: export CSV di giocate e movimenti di cassa.
