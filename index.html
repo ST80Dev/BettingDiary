@@ -23,6 +23,12 @@
       <div id="strategy-grid" class="strategy-grid"></div>
 
       <form id="bet-form" autocomplete="off">
+        <!-- sport: prima scelta del form, determina i tipi di giocata disponibili -->
+        <div class="field-group">
+          <span class="field-label">Sport</span>
+          <div class="segmented" id="f-sport"></div>
+        </div>
+
         <div class="field-row">
           <label class="field grow">
             <span>Evento</span>
@@ -40,11 +46,11 @@
             <span>Stake *</span>
             <input type="text" id="f-stake" inputmode="decimal" placeholder="10">
           </label>
-          <label class="field num">
+          <label class="field num" id="f-minute-field">
             <span>Minuto</span>
             <input type="number" id="f-minute" inputmode="numeric" min="0" max="150" placeholder="32">
           </label>
-          <label class="field num">
+          <label class="field num" id="f-score-field">
             <span>Punteggio</span>
             <input type="text" id="f-score" placeholder="0-0">
           </label>
@@ -60,8 +66,8 @@
           <button type="button" data-delta="1">+1</button>
         </div>
 
-        <!-- interruttori situazione / durata -->
-        <div class="field-row">
+        <!-- interruttori situazione / durata (specifici del calcio) -->
+        <div class="field-row" id="f-context-row">
           <div class="field half"><span>Situazione</span><div class="segmented" id="f-live"></div></div>
           <div class="field half"><span>Durata</span><div class="segmented" id="f-period"></div></div>
         </div>
@@ -91,6 +97,9 @@
         <div class="sel-block hidden" id="f-sel-pari_dispari">
           <span class="field-label">Pari / Dispari</span><div class="segmented" id="f-pari"></div>
         </div>
+        <div class="sel-block hidden" id="f-sel-vincente">
+          <span class="field-label">Vincente (giocatore)</span><div class="segmented" id="f-vwinner"></div>
+        </div>
         <div class="sel-block hidden field-row" id="f-sel-altro">
           <label class="field grow"><span>Descrizione giocata</span><input type="text" id="f-altro" placeholder="es. Under 3.5 casa"></label>
         </div>
@@ -112,11 +121,7 @@
             </label>
           </div>
           <div class="field-row">
-            <label class="field half">
-              <span>Sport</span>
-              <select id="f-sport"></select>
-            </label>
-            <label class="field half">
+            <label class="field grow">
               <span>Data/ora giocata</span>
               <input type="datetime-local" id="f-placed">
             </label>
@@ -220,6 +225,9 @@
         </div>
         <div class="sel-block hidden" id="s-sel-pari_dispari">
           <span class="field-label">Pari / Dispari</span><div class="segmented" id="s-pari"></div>
+        </div>
+        <div class="sel-block hidden" id="s-sel-vincente">
+          <span class="field-label">Vincente (giocatore)</span><div class="segmented" id="s-vwinner"></div>
         </div>
         <div class="sel-block hidden field-row" id="s-sel-altro">
           <label class="field grow"><span>Descrizione giocata</span><input type="text" id="s-altro"></label>
