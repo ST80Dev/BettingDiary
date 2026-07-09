@@ -67,10 +67,15 @@ distribuzione di line e quota Over al minuto d'ingresso.
 
 | min | gol | line | Over | note |
 |---|---|---|---|---|
+| 24 | 3 | 3.75 | 1.80 | line SOPRA il floor (3.5+0.25), over cheap, minuto precoce (Adelaide 2-1) |
 | 31 | 4 | 4.5 | 1.90 | floor, gara prolifica (Vietnam 0-4) |
 | 38 | 4 | 4.5 | 2.425 | stessa gara, deriva temporale |
 | 30 | 1 | 1.5 | 2.10 | floor, amichevole gol attesi bassi |
 | 33 | 1 | 1.5 | 2.425 | stessa gara, deriva temporale |
 
-> Manca ancora: uno screen col **gradino di ribasso in atto** (line sopra il floor
-> che scende) e casistiche **gol_segnati 0, 2, 3**.
+**Prima conferma "sopra il floor":** Adelaide 3 gol al 24' → line 3.75 (floor+0.25)
+con Over 1.80. Minuto precoce + gara prolifica → il mercato tiene la line sopra il
+pavimento e l'Over cheap. Coerente col modello.
+
+> Manca ancora: uno screen col **gradino di ribasso in atto** (la stessa line che
+> passa da sopra-floor al floor tra due rilevazioni) e casistiche **gol_segnati 0 e 2**.
