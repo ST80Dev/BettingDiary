@@ -1,2 +1,2 @@
-minuto,gol_segnati,mercato,line,quota_over,quota_under,scarto_equilibrio,fonte,note
-31,4,somma_goal_asian_1T,4.5,1.90,1.90,0.00,reale,"bet365 - line bilanciata pieno (scored+0.5); Ha Noi II 0-4, gara molto prolifica"
+minuto,gol_segnati,line,quota,fonte,note
+31,4,4.5,1.90,reale,"bet365 - somma goal asian 1T; Ha Noi II 0-4, line bilanciata (scored+0.5)"
