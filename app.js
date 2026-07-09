@@ -81,6 +81,8 @@ const DEFAULT_BANDS = { bassa_max: 1.75, media_max: 1.95 };
 
 let db = null;
 let strategies = [];          // [{id, ...data}]
+let deposits = [];            // movimenti di cassa [{id, amount, date, note}]
+let cassa = { deposits: 0, realized: 0, pending: 0, total: 0 }; // stato cassa (tutto lo storico)
 let bands = { ...DEFAULT_BANDS };
 let selectedStrategyId = localStorage.getItem('bd_last_strategy') || '';
 let editingBetId = null;
@@ -287,6 +289,8 @@ function initStaticSelects() {
   fillSelect($('fl-marketcode'), BET_TYPES, { empty: 'Tutti i tipi' });
   initMarketControls('f');
   initMarketControls('s');
+  buttonGroup($('dep-type'), [['versamento', 'Versamento'], ['prelievo', 'Prelievo']], 'versamento');
+  $('dep-date').value = toDatetimeLocal(new Date());
 }
 
 // ---------------------------------------------------------------- gruppi di pulsanti
@@ -602,6 +606,111 @@ $('btn-delete-strategy').addEventListener('click', async () => {
   }
 });
 
+// ---------------------------------------------------------------- cassa (versamenti)
+
+// I versamenti sono capitale: alimentano la cassa attuale ma non i conteggi di
+// ROI/vincite, che restano calcolati solo sulle giocate.
+async function loadDeposits() {
+  if (!db) return;
+  try {
+    const snap = await getDocs(collection(db, 'deposits'));
+    deposits = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    deposits.sort((a, b) => (toDate(b.date) || 0) - (toDate(a.date) || 0)
+      || (toDate(b.created_at) || 0) - (toDate(a.created_at) || 0));
+  } catch (err) {
+    console.error('Caricamento cassa fallito', err);
+    return;
+  }
+  renderDepositList();
+}
+
+function renderDepositList() {
+  const total = deposits.reduce((s, d) => s + (d.amount || 0), 0);
+  $('deposit-total').textContent = `${total.toFixed(2)} €`;
+  const list = $('deposit-list');
+  list.innerHTML = '';
+  if (!deposits.length) {
+    list.innerHTML = '<p class="hint">Nessun movimento di cassa registrato.</p>';
+    return;
+  }
+  for (const d of deposits) {
+    const pos = (d.amount || 0) >= 0;
+    const item = document.createElement('div');
+    item.className = 'deposit-item';
+    item.innerHTML = `<div class="d-info">
+        <span class="d-amount ${pos ? 'pos' : 'neg'}">${pos ? '+' : ''}${(d.amount || 0).toFixed(2)} €</span>
+        <small>${fmtDate(d.date)}${d.note ? ' · ' + escapeHtml(d.note) : ''}</small>
+      </div>`;
+    const del = document.createElement('button');
+    del.className = 'undo-btn';
+    del.textContent = 'Elimina';
+    del.onclick = () => deleteDeposit(d);
+    item.appendChild(del);
+    list.appendChild(item);
+  }
+}
+
+async function deleteDeposit(d) {
+  if (!requireDb()) return;
+  if (!confirm('Eliminare questo movimento di cassa?')) return;
+  try {
+    await deleteDoc(doc(db, 'deposits', d.id));
+    toast('Movimento eliminato');
+    await loadDeposits();
+  } catch (err) {
+    console.error(err);
+    toast('Errore nell\'eliminazione');
+  }
+}
+
+$('deposit-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!requireDb()) return;
+  const amount = parseNum($('dep-amount').value);
+  if (!amount || amount <= 0) { toast('Importo non valido'); return; }
+  const sign = groupValue($('dep-type')) === 'prelievo' ? -1 : 1;
+  const date = $('dep-date').value ? new Date($('dep-date').value) : new Date();
+  try {
+    await addDoc(collection(db, 'deposits'), {
+      amount: Math.round(sign * amount * 100) / 100,
+      date: Timestamp.fromDate(date),
+      note: $('dep-note').value.trim() || null,
+      created_at: Timestamp.now(),
+    });
+    toast('Movimento di cassa salvato');
+    $('deposit-form').reset();
+    $('dep-date').value = toDatetimeLocal(new Date());
+    setGroupValue($('dep-type'), 'versamento');
+    await loadDeposits();
+  } catch (err) {
+    console.error(err);
+    toast('Errore nel salvataggio');
+  }
+});
+
+// Calcola la cassa su TUTTO lo storico (indipendente dai filtri della dashboard):
+// cassa = versamenti netti + profit realizzato delle giocate saldate.
+async function loadCassa() {
+  const depTotal = deposits.reduce((s, d) => s + (d.amount || 0), 0);
+  let realized = 0, pending = 0;
+  try {
+    const snap = await getDocs(collection(db, 'bets'));
+    for (const bd of snap.docs) {
+      const b = bd.data();
+      if (b.result === 'pending') pending += (b.stake || 0);
+      else if (b.profit != null) realized += b.profit;
+    }
+  } catch (err) {
+    console.error('Calcolo cassa fallito', err);
+  }
+  cassa = {
+    deposits: Math.round(depTotal * 100) / 100,
+    realized: Math.round(realized * 100) / 100,
+    pending: Math.round(pending * 100) / 100,
+    total: Math.round((depTotal + realized) * 100) / 100,
+  };
+}
+
 // ---------------------------------------------------------------- form bet
 
 function resetBetForm({ keepPreset = true } = {}) {
@@ -868,7 +977,9 @@ function filteredBets() {
 async function refreshDashboard() {
   if (!db) return;
   try {
+    await loadDeposits();
     await loadDashboardBets();
+    await loadCassa();
   } catch (err) {
     console.error(err);
     toast('Errore nel caricare i dati');
@@ -884,6 +995,13 @@ async function refreshDashboard() {
 function renderDashboard() {
   const bets = filteredBets();
   const settled = bets.filter((b) => b.result !== 'pending' && b.profit !== null);
+
+  // ---- cassa attuale (tutto lo storico, non filtrata)
+  const realizedSign = cassa.realized >= 0 ? '+' : '';
+  $('cassa-card').innerHTML = `
+    <div class="cassa-label">💰 Cassa attuale <span class="cassa-tag">totale reale</span></div>
+    <div class="cassa-value">${cassa.total.toFixed(2)} €</div>
+    <div class="cassa-sub">versato ${cassa.deposits.toFixed(2)} € · profit giocato ${realizedSign}${cassa.realized.toFixed(2)} € · in gioco ${cassa.pending.toFixed(2)} €</div>`;
 
   // ---- KPI complessivi
   const totProfit = settled.reduce((s, b) => s + b.profit, 0);
@@ -1051,6 +1169,35 @@ $('btn-export-csv').addEventListener('click', async () => {
   }
 });
 
+$('btn-export-cassa').addEventListener('click', async () => {
+  if (!requireDb()) return;
+  try {
+    const snap = await getDocs(collection(db, 'deposits'));
+    const rows = snap.docs.map((d) => d.data())
+      .sort((a, b) => (toDate(a.date) || 0) - (toDate(b.date) || 0));
+    const esc = (v) => {
+      if (v === null || v === undefined) return '';
+      const s = String(v);
+      return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    };
+    const lines = ['date,amount,note'];
+    for (const r of rows) {
+      const dt = toDate(r.date);
+      lines.push([dt ? esc(dt.toISOString()) : '', esc(r.amount), esc(r.note)].join(','));
+    }
+    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `betdiary_cassa_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast(`Esportati ${rows.length} movimenti di cassa`);
+  } catch (err) {
+    console.error(err);
+    toast('Errore nell\'export');
+  }
+});
+
 // ---------------------------------------------------------------- avvio
 
 async function main() {
@@ -1064,6 +1211,7 @@ async function main() {
   }
   await loadBands();
   await loadStrategies();
+  await loadDeposits();
   applyPreset();
 }
 
