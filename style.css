@@ -144,25 +144,41 @@ form { display: block; }
 .sel-block.field-row { display: flex; }
 .sel-block.field-row.hidden { display: none; }
 
-/* ---- esito contestuale nel form giocata ---- */
+/* colonne Direzione/Tipo linea di pari larghezza esatta (evita che "Over +" vada a capo) */
+#f-sel-over_under .field-row, #s-sel-over_under .field-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+}
+#f-sel-over_under .field.half, #s-sel-over_under .field.half { min-width: 0; }
+#f-oudir .seg-btn, #f-outype .seg-btn, #s-oudir .seg-btn, #s-outype .seg-btn { white-space: nowrap; }
+
+/* ---- esito contestuale nel form giocata (uniforme alla sezione Pending) ---- */
 .result-hint { font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--muted); }
 .result-profit { margin-top: 10px; font-size: 0.95rem; font-weight: 800; }
 .result-profit.pos { color: var(--green); }
 .result-profit.neg { color: var(--red); }
 .result-profit.zero { color: var(--muted); }
-#f-result .seg-btn[data-val="win"].active,
-#f-result .seg-btn[data-val="half_win"].active {
-  border-color: var(--green); background: var(--green-soft); color: var(--green);
-  box-shadow: 0 4px 12px rgba(18, 185, 129, 0.18);
+
+/* stessi colori/forma dei pulsanti di saldo (.settle-btns) della sezione Pending */
+.results { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.results .seg-btn {
+  min-width: 0; padding: 12px 6px; border-radius: 12px;
+  border: 2px solid var(--border); background: var(--bg3); color: var(--text);
+  font-size: 0.98rem; font-weight: 800;
 }
-#f-result .seg-btn[data-val="loss"].active,
-#f-result .seg-btn[data-val="half_loss"].active {
-  border-color: var(--red); background: var(--red-soft); color: var(--red);
-  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.18);
+.results .seg-btn[data-val="pending"] { color: var(--muted); }
+.results .seg-btn[data-val="win"], .results .seg-btn[data-val="half_win"] {
+  color: var(--green); border-color: var(--green-soft); background: var(--green-soft);
 }
-#f-result .seg-btn[data-val="void"].active {
-  border-color: var(--yellow); background: var(--yellow-soft); color: var(--yellow);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.18);
+.results .seg-btn[data-val="void"] {
+  color: var(--yellow); border-color: var(--yellow-soft); background: var(--yellow-soft);
+}
+.results .seg-btn[data-val="loss"], .results .seg-btn[data-val="half_loss"] {
+  color: var(--red); border-color: var(--red-soft); background: var(--red-soft);
+}
+/* selezionato: bordo del colore corrente + ombra per marcare la scelta */
+.results .seg-btn.active { border-color: currentColor; box-shadow: 0 3px 10px rgba(22, 32, 58, 0.16); }
+.results .seg-btn[data-val="pending"].active {
+  color: var(--accent); border-color: var(--accent); background: var(--accent-soft);
 }
 
 input, select, textarea {
@@ -341,4 +357,5 @@ details[open] summary::before { content: "▾ "; }
   .strategy-grid { grid-template-columns: 1fr 1fr 1fr; }
   .filters { grid-template-columns: 1fr 1fr 1fr 1fr; }
   .kpi-cards { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .results { grid-template-columns: repeat(6, 1fr); }
 }
