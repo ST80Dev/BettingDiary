@@ -13,8 +13,10 @@ import {
 // ---------------------------------------------------------------- costanti
 
 const SPORTS = ['calcio', 'tennis', 'basket', 'altro'];
+const SPORT_LABELS = { calcio: 'Calcio', tennis: 'Tennis', basket: 'Basket', altro: 'Altro' };
 
 // Tipi di giocata: categorie realmente distinte, ognuna con le sue sotto-scelte a pulsanti.
+// Le prime sono da calcio; le "vincente_*" sono da tennis (partita/set/game).
 const BET_TYPES = [
   ['1x2', '1X2'],
   ['doppia_chance', 'DC'],
@@ -22,10 +24,30 @@ const BET_TYPES = [
   ['gg_ng', 'GG/NG'],
   ['multigoal', 'MG'],
   ['pari_dispari', 'P/D'],
+  ['vincente_match', 'Vincente partita'],
+  ['vincente_set', 'Vincente set'],
+  ['vincente_game', 'Vincente game'],
   ['altro', 'Altro'],
 ];
 const BET_TYPE_LABELS = Object.fromEntries(BET_TYPES);
-const SEL_TYPES = BET_TYPES.map(([v]) => v); // per mostrare/nascondere i blocchi
+
+// Blocchi di sotto-scelta presenti nel DOM. I tre mercati tennis "vincente_*"
+// condividono un unico blocco "vincente" (scelta del giocatore 1/2).
+const SEL_BLOCKS = ['1x2', 'doppia_chance', 'over_under', 'gg_ng', 'multigoal', 'pari_dispari', 'vincente', 'altro'];
+const VINCENTE_TYPES = ['vincente_match', 'vincente_set', 'vincente_game'];
+const isVincente = (type) => VINCENTE_TYPES.includes(type);
+
+// Mercati disponibili per sport. Il calcio usa tutti i preset; il tennis ha i suoi
+// tipi (vincente partita/set/game). Gli sport senza mercati dedicati (basket, altro)
+// ricadono sul set calcio, così non si perde nulla rispetto a prima.
+const SOCCER_MARKETS = ['1x2', 'doppia_chance', 'over_under', 'gg_ng', 'multigoal', 'pari_dispari', 'altro'];
+const SPORT_MARKETS = {
+  calcio: SOCCER_MARKETS,
+  tennis: ['vincente_match', 'vincente_set', 'vincente_game', 'altro'],
+};
+function marketsForSport(sport) {
+  return (SPORT_MARKETS[sport] || SOCCER_MARKETS).map((code) => [code, BET_TYPE_LABELS[code]]);
+}
 
 // Sotto-scelte coerenti per tipo (tutte a pulsanti)
 const LIVE_OPTS = [['pre', 'Pre'], ['live', 'Live']];
@@ -34,6 +56,7 @@ const ONEX2_OPTS = [['1', '1'], ['X', 'X'], ['2', '2']];
 const DC_OPTS = [['1X', '1X'], ['12', '12'], ['X2', 'X2']];
 const GGNG_OPTS = [['GG', 'GG'], ['NG', 'NG']];
 const PARI_OPTS = [['pari', 'Pari'], ['dispari', 'Dispari']];
+const WINNER_OPTS = [['1', '1'], ['2', '2']]; // tennis: vincente giocatore 1 / 2
 const OUDIR_OPTS = [['over', 'Over +'], ['under', 'Under −']];
 
 // Tipo di linea Over/Under: normale (intere/mezze) o asiatica (a quarto).
@@ -282,13 +305,16 @@ function fillSelect(sel, entries, { empty = null } = {}) {
 }
 
 function initStaticSelects() {
-  const sportEntries = SPORTS.map((s) => [s, s]);
-  fillSelect($('f-sport'), sportEntries);
+  const sportEntries = SPORTS.map((s) => [s, SPORT_LABELS[s] || s]);
+  // Sport nel form giocata: pulsanti in cima, cambia i tipi di giocata disponibili.
+  buttonGroup($('f-sport'), sportEntries, 'calcio', () => applySportUI('f'));
   fillSelect($('s-sport'), sportEntries, { empty: '—' });
   fillSelect($('fl-sport'), sportEntries, { empty: 'Tutti gli sport' });
   fillSelect($('fl-marketcode'), BET_TYPES, { empty: 'Tutti i tipi' });
   initMarketControls('f');
   initMarketControls('s');
+  // Anche la strategia adegua i tipi di giocata allo sport scelto.
+  $('s-sport').addEventListener('change', () => applySportUI('s'));
   buttonGroup($('dep-type'), [['versamento', 'Versamento'], ['prelievo', 'Prelievo']], 'versamento');
   $('dep-date').value = toDatetimeLocal(new Date());
 }
@@ -337,18 +363,60 @@ function initMarketControls(p) {
   buttonGroup($(`${p}-dc`), DC_OPTS, '');
   buttonGroup($(`${p}-ggng`), GGNG_OPTS, '');
   buttonGroup($(`${p}-pari`), PARI_OPTS, '');
+  buttonGroup($(`${p}-vwinner`), WINNER_OPTS, '');
   buttonGroup($(`${p}-oudir`), OUDIR_OPTS, 'over');
   buttonGroup($(`${p}-outype`), OUTYPE_OPTS, 'normale', () => { renderOuLines(p); renderResultOptions(p); });
   renderOuLines(p);
   buttonGroup($(`${p}-multigoal`), MULTIGOAL_RANGES.map((r) => [r, r]), '');
-  buttonGroup($(`${p}-type`), BET_TYPES, '', (type) => { showSelBlock(p, type); renderResultOptions(p); });
-  showSelBlock(p, '');
+  renderTypeChips(p, getSport(p));
   renderResultOptions(p);
 }
 
+// Sport corrente del prefisso p (segmented per il form giocata, select per la strategia).
+function getSport(p) {
+  const el = $(`${p}-sport`);
+  return el.tagName === 'SELECT' ? (el.value || '') : groupValue(el);
+}
+function setSport(p, v) {
+  const el = $(`${p}-sport`);
+  if (el.tagName === 'SELECT') el.value = v || '';
+  else setGroupValue(el, v || 'calcio');
+}
+
+// (Ri)disegna i pulsanti "Tipo giocata" con i soli mercati dello sport scelto,
+// mantenendo la selezione se ancora valida.
+function renderTypeChips(p, sport) {
+  const entries = marketsForSport(sport);
+  const cur = groupValue($(`${p}-type`));
+  const keep = entries.some(([v]) => v === cur) ? cur : '';
+  buttonGroup($(`${p}-type`), entries, keep, (type) => { showSelBlock(p, type); renderResultOptions(p); });
+  showSelBlock(p, keep);
+}
+
+// Reazione al cambio sport: aggiorna i tipi di giocata e (nel form giocata)
+// mostra/nasconde i campi specifici del calcio.
+function applySportUI(p) {
+  const sport = getSport(p);
+  renderTypeChips(p, sport);
+  renderResultOptions(p);
+  if (p === 'f') toggleSoccerFields(sport === 'calcio');
+}
+
+// Campi che hanno senso solo nel calcio: minuto, punteggio, situazione/durata.
+function toggleSoccerFields(show) {
+  $('f-minute-field').classList.toggle('hidden', !show);
+  $('f-score-field').classList.toggle('hidden', !show);
+  $('f-context-row').classList.toggle('hidden', !show);
+  if (!show) { setGroupValue($('f-live'), 'pre'); setGroupValue($('f-period'), 'ft'); }
+}
+
+// I mercati tennis "vincente_*" condividono l'unico blocco DOM "vincente".
+function blockForType(type) { return isVincente(type) ? 'vincente' : type; }
+
 function showSelBlock(p, type) {
-  for (const t of SEL_TYPES) {
-    $(`${p}-sel-${t}`).classList.toggle('hidden', t !== type);
+  const active = blockForType(type);
+  for (const b of SEL_BLOCKS) {
+    $(`${p}-sel-${b}`).classList.toggle('hidden', b !== active);
   }
 }
 
@@ -419,6 +487,7 @@ function readMarket(p) {
   } else if (type === 'gg_ng') { selection = groupValue($(`${p}-ggng`)) || null; core = selection || 'GG/NG'; }
   else if (type === 'multigoal') { selection = groupValue($(`${p}-multigoal`)) || null; core = selection ? `Multigoal ${selection}` : 'Multigoal'; }
   else if (type === 'pari_dispari') { selection = groupValue($(`${p}-pari`)) || null; core = selection === 'dispari' ? 'Dispari' : selection === 'pari' ? 'Pari' : 'Pari/Dispari'; }
+  else if (isVincente(type)) { selection = groupValue($(`${p}-vwinner`)) || null; core = BET_TYPE_LABELS[type] + (selection ? ` ${selection}` : ''); }
   else if (type === 'altro') { selection = $(`${p}-altro`).value.trim() || null; core = selection || 'Altro'; }
 
   const ctx = [period === 'ht' ? '1T' : null, live ? 'Live' : null].filter(Boolean).join(' · ');
@@ -437,6 +506,7 @@ function setMarket(p, m = {}) {
   setGroupValue($(`${p}-dc`), type === 'doppia_chance' ? (m.selection || '') : '');
   setGroupValue($(`${p}-ggng`), type === 'gg_ng' ? (m.selection || '') : '');
   setGroupValue($(`${p}-pari`), type === 'pari_dispari' ? (m.selection || '') : '');
+  setGroupValue($(`${p}-vwinner`), isVincente(type) ? (m.selection || '') : '');
   setGroupValue($(`${p}-oudir`), type === 'over_under' ? (m.selection || 'over') : 'over');
   setGroupValue($(`${p}-outype`), type === 'over_under' ? (m.line_type || 'normale') : 'normale');
   renderOuLines(p);
@@ -493,7 +563,7 @@ function selectStrategy(id) {
 function applyPreset() {
   const s = strategies.find((x) => x.id === selectedStrategyId);
   if (!s) return;
-  if (s.sport_default) $('f-sport').value = s.sport_default;
+  if (s.sport_default) { setSport('f', s.sport_default); applySportUI('f'); }
   $('f-stake').value = s.stake_default ?? '';
   $('f-minute').value = s.entry_minute_default ?? '';
   setMarket('f', {
@@ -535,6 +605,7 @@ function openStrategyForm(id = null) {
   $('s-minute').value = s.entry_minute_default ?? '';
   $('s-order').value = s.sort_order ?? 0;
   $('s-active').checked = s.active !== false;
+  applySportUI('s'); // tipi di giocata coerenti con lo sport della strategia
   setMarket('s', {
     market_code: s.market_code_default,
     selection: s.selection_default,
@@ -721,7 +792,8 @@ function resetBetForm({ keepPreset = true } = {}) {
   $('btn-cancel-edit').classList.add('hidden');
   $('bet-form').reset();
   $('f-placed').value = toDatetimeLocal(new Date());
-  $('f-sport').value = 'calcio';
+  setSport('f', 'calcio');
+  applySportUI('f'); // ripristina i tipi calcio e i relativi campi
   setGroupValue($('f-result'), 'pending');
   setMarket('f', {}); // riporta interruttori e tipo allo stato neutro (rirender esito)
   if (keepPreset) applyPreset();
@@ -757,10 +829,12 @@ $('bet-form').addEventListener('submit', async (e) => {
   const strategy = strategies.find((x) => x.id === selectedStrategyId) || null;
   const placed = $('f-placed').value ? new Date($('f-placed').value) : new Date();
   const m = readMarket('f');
+  const sport = getSport('f') || 'calcio';
+  const isSoccer = sport === 'calcio';
 
   const data = {
     placed_at: Timestamp.fromDate(placed),
-    sport: $('f-sport').value || 'calcio',
+    sport,
     event: $('f-event').value.trim() || null,
     competition: $('f-competition').value.trim() || null,
     market: m.market || 'n.d.',
@@ -772,8 +846,9 @@ $('bet-form').addEventListener('submit', async (e) => {
     period: m.period,
     odds: Math.round(odds * 1000) / 1000,
     stake: Math.round(stake * 100) / 100,
-    entry_minute: parseNum($('f-minute').value),
-    score_at_entry: $('f-score').value.trim() || null,
+    // minuto e punteggio d'ingresso sono campi da calcio: non li salviamo per gli altri sport.
+    entry_minute: isSoccer ? parseNum($('f-minute').value) : null,
+    score_at_entry: isSoccer ? ($('f-score').value.trim() || null) : null,
   };
 
   // Esito segnato contestualmente (opzionale): se diverso da pending calcolo subito il profit.
@@ -831,7 +906,8 @@ function editBet(bet) {
   $('f-stake').value = bet.stake ?? '';
   $('f-minute').value = bet.entry_minute ?? '';
   $('f-score').value = bet.score_at_entry || '';
-  $('f-sport').value = bet.sport || 'calcio';
+  setSport('f', bet.sport || 'calcio');
+  applySportUI('f'); // tipi di giocata e campi coerenti con lo sport della giocata
   setMarket('f', bet); // imposta il mercato (e rirender le opzioni esito)
   setGroupValue($('f-result'), bet.result || 'pending');
   // preserva un esito già "mezzo" anche se il mercato non risultasse asiatico
