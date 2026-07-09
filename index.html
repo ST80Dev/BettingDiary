@@ -84,8 +84,10 @@
           <span class="field-label">Doppia chance</span><div class="segmented" id="f-dc"></div>
         </div>
         <div class="sel-block hidden" id="f-sel-over_under">
-          <span class="field-label">Direzione</span><div class="segmented" id="f-oudir"></div>
-          <span class="field-label">Tipo linea</span><div class="segmented" id="f-outype"></div>
+          <div class="field-row">
+            <div class="field half"><span>Direzione</span><div class="segmented" id="f-oudir"></div></div>
+            <div class="field half"><span>Tipo linea</span><div class="segmented" id="f-outype"></div></div>
+          </div>
           <span class="field-label">Linea gol</span><div class="chips" id="f-ouline"></div>
         </div>
         <div class="sel-block hidden" id="f-sel-gg_ng">
@@ -105,10 +107,10 @@
         </div>
 
         <!-- esito contestuale: consente di segnare subito il risultato in fase di inserimento.
-             Le mezze vincite/perdite compaiono solo sulle giocate asiatiche (linee a quarto). -->
+             Pulsanti uniformi a quelli della sezione Pending (W / ½W / V / ½L / L). -->
         <div class="field-group" id="f-result-group">
           <span class="field-label">Esito <small class="result-hint">(opzionale — lascia “Pending” per saldare dopo)</small></span>
-          <div class="chips results" id="f-result"></div>
+          <div class="results" id="f-result"></div>
           <div id="f-result-profit" class="result-profit hidden"></div>
         </div>
 
@@ -213,8 +215,10 @@
           <span class="field-label">Doppia chance</span><div class="segmented" id="s-dc"></div>
         </div>
         <div class="sel-block hidden" id="s-sel-over_under">
-          <span class="field-label">Direzione</span><div class="segmented" id="s-oudir"></div>
-          <span class="field-label">Tipo linea</span><div class="segmented" id="s-outype"></div>
+          <div class="field-row">
+            <div class="field half"><span>Direzione</span><div class="segmented" id="s-oudir"></div></div>
+            <div class="field half"><span>Tipo linea</span><div class="segmented" id="s-outype"></div></div>
+          </div>
           <span class="field-label">Linea gol</span><div class="chips" id="s-ouline"></div>
         </div>
         <div class="sel-block hidden" id="s-sel-gg_ng">

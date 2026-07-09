@@ -61,10 +61,13 @@ const OUDIR_OPTS = [['over', 'Over +'], ['under', 'Under −']];
 
 // Tipo di linea Over/Under: normale (intere/mezze) o asiatica (a quarto).
 const OUTYPE_OPTS = [['normale', 'Normale'], ['asiatica', 'Asiatica']];
-// Linee normali: intere e mezze (fino a 4.5).
+// Linee normali (europee): intere e mezze, fino a 4.5.
 const OU_LINES_NORMAL = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5];
-// Linee asiatiche a quarto (0.75 = 0.5/1, 1.25 = 1/1.5, ...).
-const OU_LINES_ASIAN = [0.25, 0.75, 1.25, 1.75, 2.25, 2.75, 3.25, 3.75, 4.25];
+// Linee asiatiche: scala completa (quarti + mezze + intere), fino a 4.5.
+const OU_LINES_ASIAN = [
+  0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75,
+  3, 3.25, 3.5, 3.75, 4, 4.25, 4.5,
+];
 function ouLinesFor(type) { return type === 'asiatica' ? OU_LINES_ASIAN : OU_LINES_NORMAL; }
 
 // Intervalli multigoal comuni
@@ -78,17 +81,12 @@ const RESULT_LABELS = {
   half_win: 'Half win', half_loss: 'Half loss',
 };
 
-// Opzioni esito per l'inserimento contestuale. Le mezze vincite/perdite (e i
-// relativi mezzi rimborsi) esistono solo sulle giocate asiatiche a quarto,
-// quindi si mostrano soltanto quando la linea è asiatica.
-function resultOptionsFor(asian) {
-  const opts = [['pending', 'Pending'], ['win', 'Win']];
-  if (asian) opts.push(['half_win', '½ Win']);
-  opts.push(['void', 'Void']);
-  if (asian) opts.push(['half_loss', '½ Loss']);
-  opts.push(['loss', 'Loss']);
-  return opts;
-}
+// Opzioni esito per l'inserimento contestuale: sempre tutte, uniformi ai
+// pulsanti della sezione Pending (W / ½W / V / ½L / L), più "Pending" (default).
+const RESULT_OPTS = [
+  ['pending', 'Pending'], ['win', 'W'], ['half_win', '½W'],
+  ['void', 'V'], ['half_loss', '½L'], ['loss', 'L'],
+];
 
 const MINUTE_BUCKETS = [
   { label: "≤25'", min: 0, max: 25 },
@@ -315,6 +313,8 @@ function initStaticSelects() {
   initMarketControls('s');
   // Anche la strategia adegua i tipi di giocata allo sport scelto.
   $('s-sport').addEventListener('change', () => applySportUI('s'));
+  // Esito contestuale (solo form giocata): pulsanti fissi, come nel Pending.
+  buttonGroup($('f-result'), RESULT_OPTS, 'pending', updateResultProfit);
   buttonGroup($('dep-type'), [['versamento', 'Versamento'], ['prelievo', 'Prelievo']], 'versamento');
   $('dep-date').value = toDatetimeLocal(new Date());
 }
@@ -365,11 +365,10 @@ function initMarketControls(p) {
   buttonGroup($(`${p}-pari`), PARI_OPTS, '');
   buttonGroup($(`${p}-vwinner`), WINNER_OPTS, '');
   buttonGroup($(`${p}-oudir`), OUDIR_OPTS, 'over');
-  buttonGroup($(`${p}-outype`), OUTYPE_OPTS, 'normale', () => { renderOuLines(p); renderResultOptions(p); });
+  buttonGroup($(`${p}-outype`), OUTYPE_OPTS, 'normale', () => renderOuLines(p));
   renderOuLines(p);
   buttonGroup($(`${p}-multigoal`), MULTIGOAL_RANGES.map((r) => [r, r]), '');
   renderTypeChips(p, getSport(p));
-  renderResultOptions(p);
 }
 
 // Sport corrente del prefisso p (segmented per il form giocata, select per la strategia).
@@ -389,7 +388,7 @@ function renderTypeChips(p, sport) {
   const entries = marketsForSport(sport);
   const cur = groupValue($(`${p}-type`));
   const keep = entries.some(([v]) => v === cur) ? cur : '';
-  buttonGroup($(`${p}-type`), entries, keep, (type) => { showSelBlock(p, type); renderResultOptions(p); });
+  buttonGroup($(`${p}-type`), entries, keep, (type) => showSelBlock(p, type));
   showSelBlock(p, keep);
 }
 
@@ -398,7 +397,6 @@ function renderTypeChips(p, sport) {
 function applySportUI(p) {
   const sport = getSport(p);
   renderTypeChips(p, sport);
-  renderResultOptions(p);
   if (p === 'f') toggleSoccerFields(sport === 'calcio');
 }
 
@@ -427,28 +425,6 @@ function renderOuLines(p) {
   const cur = groupValue($(`${p}-ouline`));
   const keep = lines.map(String).includes(cur) ? cur : '';
   buttonGroup($(`${p}-ouline`), lines.map((l) => [String(l), lineLabel(l)]), keep);
-}
-
-// True se il mercato selezionato è una giocata Over/Under asiatica (linea a quarto).
-function marketIsAsian(p) {
-  return groupValue($(`${p}-type`)) === 'over_under'
-    && (groupValue($(`${p}-outype`)) || 'normale') === 'asiatica';
-}
-
-// (Ri)disegna i pulsanti esito del form giocata in base al tipo di linea.
-// No-op sui prefissi senza controllo esito (es. le strategie).
-// forceHalves: mostra comunque le mezze (per caricare un esito già mezzo su una
-// giocata non asiatica, es. saldata a metà dalla scheda Pending). In modifica
-// interattiva del tipo giocata resta false, così cambiando mercato una mezza
-// selezionata torna a "pending" invece di rimanere incoerente.
-function renderResultOptions(p, forceHalves = false) {
-  const grp = $(`${p}-result`);
-  if (!grp) return;
-  const cur = groupValue(grp) || 'pending';
-  const opts = resultOptionsFor(marketIsAsian(p) || forceHalves);
-  const keep = opts.some(([v]) => v === cur) ? cur : 'pending';
-  buttonGroup(grp, opts, keep, () => updateResultProfit());
-  updateResultProfit();
 }
 
 // Anteprima del profit calcolato dall'esito selezionato nel form giocata.
@@ -512,7 +488,6 @@ function setMarket(p, m = {}) {
   renderOuLines(p);
   setGroupValue($(`${p}-ouline`), type === 'over_under' && m.line != null ? String(m.line) : '');
   $(`${p}-altro`).value = type === 'altro' ? (m.selection || '') : '';
-  renderResultOptions(p); // adegua le opzioni esito (mezze solo se asiatica)
 }
 
 // ---------------------------------------------------------------- strategie
@@ -908,10 +883,9 @@ function editBet(bet) {
   $('f-score').value = bet.score_at_entry || '';
   setSport('f', bet.sport || 'calcio');
   applySportUI('f'); // tipi di giocata e campi coerenti con lo sport della giocata
-  setMarket('f', bet); // imposta il mercato (e rirender le opzioni esito)
+  setMarket('f', bet);
   setGroupValue($('f-result'), bet.result || 'pending');
-  // preserva un esito già "mezzo" anche se il mercato non risultasse asiatico
-  renderResultOptions('f', bet.result === 'half_win' || bet.result === 'half_loss');
+  updateResultProfit();
   const d = toDate(bet.placed_at);
   $('f-placed').value = d ? toDatetimeLocal(d) : toDatetimeLocal(new Date());
   window.scrollTo({ top: 0, behavior: 'smooth' });
