@@ -60,7 +60,7 @@ body {
 
 #main { padding: 16px 16px calc(108px + env(safe-area-inset-bottom)); max-width: 780px; margin: 0 auto; }
 
-.view-title { font-size: 1.35rem; font-weight: 800; margin: 16px 0 12px; letter-spacing: -0.01em; }
+.view-title { font-size: 1.3rem; font-weight: 800; margin: 8px 0 10px; letter-spacing: -0.01em; }
 .sub-title {
   font-size: 0.9rem; margin: 26px 0 10px; color: var(--muted);
   text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
@@ -74,7 +74,7 @@ body {
 code { background: var(--accent-soft); color: var(--accent); padding: 2px 6px; border-radius: 6px; font-size: 0.88em; font-weight: 600; }
 
 /* ---- strategy preset grid (home) ---- */
-.strategy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+.strategy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
 .strategy-btn {
   background: var(--bg2); border: 2px solid var(--border); color: var(--text);
   border-radius: var(--radius); padding: 16px 14px; font-size: 1rem; font-weight: 700;
@@ -92,50 +92,51 @@ code { background: var(--accent-soft); color: var(--accent); padding: 2px 6px; b
 
 /* ---- forms ---- */
 form { display: block; }
-.field-row { display: flex; gap: 10px; margin-bottom: 14px; }
-.field { display: flex; flex-direction: column; gap: 6px; }
-.field span { font-size: 0.82rem; color: var(--muted); font-weight: 600; }
+.field-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field span { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
 .field.grow { flex: 1; }
 .field.half { flex: 1; }
 .field.third { flex: 1; }
 .field.twothird { flex: 2; }
-.check { display: flex; align-items: center; gap: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; }
-.check input[type="checkbox"] {
-  -webkit-appearance: none; appearance: none;
-  flex: 0 0 auto; width: 26px; height: 26px; padding: 0; margin: 0;
-  border: 2px solid var(--border-strong); border-radius: 8px;
-  background: var(--bg2); position: relative; cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease;
+/* campo numerico stretto: valore corto, sta in riga con gli altri */
+.field.num { flex: 1; min-width: 0; }
+.field.num input { padding-left: 10px; padding-right: 8px; }
+
+/* stepper rapidi stake: +/- 1, 0.5, 0.05 */
+.stake-steppers { display: flex; gap: 6px; margin: -2px 0 12px; }
+.stake-steppers button {
+  flex: 1; min-width: 0; padding: 9px 0; border: 2px solid var(--border);
+  background: var(--bg2); color: var(--accent); border-radius: 10px;
+  font-size: 0.92rem; font-weight: 800; cursor: pointer;
+  transition: transform 0.1s ease, background 0.12s ease, border-color 0.12s ease;
 }
-.check input[type="checkbox"]:checked { background: var(--grad); border-color: transparent; }
-.check input[type="checkbox"]:checked::after {
-  content: ""; position: absolute; left: 8px; top: 3px;
-  width: 6px; height: 12px; border: solid #fff; border-width: 0 3px 3px 0;
-  transform: rotate(45deg);
-}
-.check input[type="checkbox"]:focus { outline: none; box-shadow: 0 0 0 4px var(--accent-soft); }
+.stake-steppers button[data-delta^="-"] { color: var(--muted); }
+.stake-steppers button:active { transform: scale(0.9); background: var(--accent-soft); border-color: var(--accent); }
+.check { display: flex; align-items: center; gap: 10px; font-size: 1rem; font-weight: 600; }
+.check input { width: 22px; height: 22px; }
 
 /* ---- gruppi di pulsanti (segmented / chips, scelta ad albero) ---- */
-.field-group { margin-bottom: 14px; }
+.field-group { margin-bottom: 10px; }
 .field-label {
-  display: block; font-size: 0.82rem; color: var(--muted); font-weight: 600; margin-bottom: 6px;
+  display: block; font-size: 0.8rem; color: var(--muted); font-weight: 600; margin-bottom: 5px;
 }
 .segmented { display: flex; gap: 8px; }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
 .seg-btn {
-  flex: 1; min-width: 56px; padding: 13px 12px; border: 2px solid var(--border);
-  background: var(--bg2); color: var(--muted); border-radius: 12px;
-  font-size: 1.02rem; font-weight: 700; cursor: pointer; text-align: center;
+  flex: 1; min-width: 52px; padding: 10px 11px; border: 2px solid var(--border);
+  background: var(--bg2); color: var(--muted); border-radius: 11px;
+  font-size: 1rem; font-weight: 700; cursor: pointer; text-align: center;
   transition: transform 0.1s ease, border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
 }
-.chips .seg-btn { flex: 0 1 auto; min-width: 52px; }
+.chips .seg-btn { flex: 0 1 auto; min-width: 50px; }
 .seg-btn.active {
   border-color: var(--accent); background: var(--accent-soft); color: var(--accent);
   box-shadow: 0 4px 12px rgba(79, 124, 255, 0.18);
 }
 .seg-btn:active { transform: scale(0.95); }
 .sel-block {
-  margin-bottom: 14px; padding: 12px; border-radius: 14px;
+  margin-bottom: 10px; padding: 10px 12px; border-radius: 14px;
   background: var(--bg3); border: 1px solid var(--border);
 }
 .sel-block .field-label { margin-top: 4px; }
@@ -166,7 +167,7 @@ form { display: block; }
 
 input, select, textarea {
   background: var(--bg2); border: 2px solid var(--border); color: var(--text);
-  border-radius: 12px; padding: 13px 14px; font-size: 1.05rem; width: 100%;
+  border-radius: 12px; padding: 11px 13px; font-size: 1rem; width: 100%;
   -webkit-appearance: none; appearance: none; transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 input::placeholder, textarea::placeholder { color: #9aa5bd; }

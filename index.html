@@ -30,30 +30,34 @@
           </label>
         </div>
 
+        <!-- riga numerica compatta: valori corti → campi stretti, si guadagna altezza -->
         <div class="field-row">
-          <label class="field third">
+          <label class="field num">
             <span>Quota *</span>
             <input type="text" id="f-odds" inputmode="decimal" placeholder="1.88" required>
           </label>
-          <label class="field third">
+          <label class="field num">
             <span>Stake *</span>
             <input type="text" id="f-stake" inputmode="decimal" placeholder="10">
           </label>
-          <label class="field third">
+          <label class="field num">
             <span>Minuto</span>
             <input type="number" id="f-minute" inputmode="numeric" min="0" max="150" placeholder="32">
           </label>
-        </div>
-
-        <div class="field-row">
-          <label class="field third">
+          <label class="field num">
             <span>Punteggio</span>
             <input type="text" id="f-score" placeholder="0-0">
           </label>
-          <label class="field twothird">
-            <span>Competizione</span>
-            <input type="text" id="f-competition" placeholder="(opzionale)">
-          </label>
+        </div>
+
+        <!-- stepper rapidi per lo stake -->
+        <div class="stake-steppers" id="stake-steppers">
+          <button type="button" data-delta="-1">−1</button>
+          <button type="button" data-delta="-0.5">−0.5</button>
+          <button type="button" data-delta="-0.05">−0.05</button>
+          <button type="button" data-delta="0.05">+0.05</button>
+          <button type="button" data-delta="0.5">+0.5</button>
+          <button type="button" data-delta="1">+1</button>
         </div>
 
         <!-- interruttori situazione / durata -->
@@ -101,6 +105,12 @@
 
         <details id="form-details">
           <summary>Altri campi</summary>
+          <div class="field-row">
+            <label class="field grow">
+              <span>Competizione</span>
+              <input type="text" id="f-competition" placeholder="(opzionale)">
+            </label>
+          </div>
           <div class="field-row">
             <label class="field half">
               <span>Sport</span>
