@@ -68,6 +68,7 @@ distribuzione di line e quota Over al minuto d'ingresso.
 | min | gol | line | Over | note |
 |---|---|---|---|---|
 | 24 | 3 | 3.75 | 1.80 | line SOPRA il floor (3.5+0.25), over cheap, minuto precoce (Adelaide 2-1) |
+| 28 | 3 | 3.75 | 1.925 | stessa Adelaide, over salito 1.80->1.925 su line sopra-floor (deriva pre-gradino) |
 | 31 | 4 | 4.5 | 1.90 | floor, gara prolifica (Vietnam 0-4) |
 | 38 | 4 | 4.5 | 2.425 | stessa gara, deriva temporale |
 | 30 | 1 | 1.5 | 2.10 | floor, amichevole gol attesi bassi |
