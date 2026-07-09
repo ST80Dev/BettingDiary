@@ -1,7 +1,9 @@
-minuto,gol_segnati,line,quota,fonte,note
-31,4,4.5,1.90,reale,"bet365 - somma goal asian 1T; Ha Noi II 0-4, line bilanciata (scored+0.5), gara prolifica"
-30,1,1.5,2.10,reale,"bet365 - amichevole Regensburg 1-0; ladder 1.5@2.10 / 1.75@2.75 / 2.0@5.25; gol attesi bassi -> over piu caro"
-33,1,1.5,2.425,reale,"bet365 - stessa gara Regensburg 1-0 al 33'; over salito da 2.10 a 2.425 in 3' senza gol (ratchet temporale), line ancora 1.5"
-38,4,4.5,2.425,reale,"bet365 - stessa gara Vietnam 0-4 al 38'; over salito da 1.90 a 2.425 in 7' senza gol; convergenza verso 45'"
-24,3,3.75,1.80,reale,"bet365 - Adelaide 2-1 al 24'; line SOPRA il floor (3.5+0.25), over favorito 1.80; minuto precoce + gara prolifica"
-28,3,3.75,1.925,reale,"bet365 - stessa Adelaide 2-1 al 28'; over salito 1.80->1.925 in 4' senza gol, line ancora sopra floor (3.75); deriva pre-gradino"
+minuto,gol_segnati,line,quota,line_ft,quota_ft,fonte,note
+31,4,4.5,1.90,,,reale,"bet365 - somma goal asian 1T; Ha Noi II 0-4, line floor (scored+0.5), gara prolifica"
+30,1,1.5,2.10,,,reale,"bet365 - amichevole Regensburg 1-0; floor; gol attesi bassi -> over piu caro"
+33,1,1.5,2.425,,,reale,"bet365 - Regensburg 1-0 al 33'; over 2.10->2.425 in 3' senza gol (deriva), floor 1.5"
+38,4,4.5,2.425,,,reale,"bet365 - Vietnam 0-4 al 38'; over 1.90->2.425 in 7' senza gol; convergenza verso 45'"
+24,3,3.75,1.80,,,reale,"bet365 - Adelaide 2-1 al 24'; line SOPRA il floor (3.5+0.25), over favorito 1.80; precoce + prolifica"
+28,3,3.75,1.925,,,reale,"bet365 - Adelaide 2-1 al 28'; over 1.80->1.925 su line sopra-floor (deriva pre-gradino)"
+30,3,3.75,2.025,5.75,1.95,reale,"bet365 - Adelaide 2-1 al 30'; over 1.925->2.025; +line FT 5.75@1.95 -> attesa ~5.7 gol tot, ~2.7 residui, P(gol entro HT)~48%"
+31,3,3.5,1.80,5.75,1.90,reale,"bet365 - Adelaide 2-1 al 30:40; GRADINO DI RIBASSO: line 3.75->3.5 (floor), over reset 2.025->1.80; trigger scattato con over ~2.02 sulla quarto-line"

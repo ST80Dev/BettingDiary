@@ -44,19 +44,39 @@ Quando l'Over diventa troppo caro **e la line è sopra il floor**:
 - l'Over **resetta in basso** (es. da ~2.20 a ~1.70),
 - poi ricomincia a salire, e può riscendere di gradino in gradino **fino al floor**.
 
-Esempio (1 gol segnato):
-- 30': line 2.0 (X+1.0) @ Over 1.95
-- 34': line 2.0, Over salito @ 2.20 (deriva)
-- 35': **scatta** a line 1.75 (X+0.75) @ Over 1.70 (reset)
-- … fino al floor 1.5, poi solo salita.
+**Sequenza reale osservata (Adelaide 2-1, 3 gol, floor = 3.5):**
+- 24:33 → line 3.75 (floor+0.25) @ Over 1.80
+- 28:03 → line 3.75 @ Over 1.925 (deriva)
+- 30:02 → line 3.75 @ Over 2.025 (over caro)
+- 30:40 → **line 3.5 (floor) @ Over 1.80** ⚡ gradino: line -0.25, over reset da 2.025 a 1.80
+
+➡️ **Trigger del gradino:** scatta quando l'Over sulla quarto-line raggiunge **~2.02-2.05**
+(non ~2.10-2.20). Il ribasso di 0.25 sulla line fa scendere l'Over di ~0.22 (2.025 → 1.80).
 
 Al floor invece **non c'è ribasso**: l'Over lievita e basta fino al 45'.
 Un gol → X aumenta → il floor risale → nuova line più alta.
 
+## 6. Ancora di aspettativa: la line FT
+
+La **line "Somma goal asiatica" FT** (tutto il match) è l'ancora migliore per stimare
+l'aspettativa gol, meglio del longshot 1X2. La sua mediana ≈ gol totali attesi a fine gara.
+
+- Es. Adelaide 3 gol al 30' → line FT **5.75** → ~5.7 gol totali attesi → **~2.7 gol residui**
+  su ~65 min → ritmo ~0.042/min → **P(≥1 gol entro HT) ≈ 48%**.
+- Da questo ritmo si stima direttamente l'Over 1T atteso, senza indovinare dal longshot.
+
+**La quota Over sul floor scala con l'aspettativa FT:** più gol attesi → floor-over più cheap.
+Confronto al floor intorno al 30-31':
+- Adelaide (FT 5.75, prolifica) → floor 3.5 @ Over **1.80**
+- Vietnam (molto prolifica) → floor 4.5 @ Over **1.90**
+- Regensburg (amichevole, pochi gol) → floor 1.5 @ Over **2.10**
+
 ## 5. Cosa registriamo (data/storico-quote-asian.csv)
 
-Colonne: `minuto, gol_segnati, line, quota, fonte, note`.
-- `quota` = sempre quota **Over** (unico lato giocato).
+Colonne: `minuto, gol_segnati, line, quota, line_ft, quota_ft, fonte, note`.
+- `quota` = sempre quota **Over** 1T (unico lato giocato).
+- `line_ft`, `quota_ft` = line e quota Over del mercato FT quando disponibili (ancora
+  di aspettativa gol); vuote se non rilevate.
 - `fonte` = `reale` (screenshot bet365) o `stimata` (derivata dal modello).
 - Lo sbilanciamento della quota è già insito nel valore stesso: non si registra a parte.
 
@@ -67,16 +87,17 @@ distribuzione di line e quota Over al minuto d'ingresso.
 
 | min | gol | line | Over | note |
 |---|---|---|---|---|
-| 24 | 3 | 3.75 | 1.80 | line SOPRA il floor (3.5+0.25), over cheap, minuto precoce (Adelaide 2-1) |
-| 28 | 3 | 3.75 | 1.925 | stessa Adelaide, over salito 1.80->1.925 su line sopra-floor (deriva pre-gradino) |
+| 24 | 3 | 3.75 | 1.80 | line SOPRA floor (+0.25), over cheap, precoce (Adelaide 2-1) |
+| 28 | 3 | 3.75 | 1.925 | Adelaide, deriva su line sopra-floor |
+| 30 | 3 | 3.75 | 2.025 | Adelaide, over caro (pronto al gradino); FT 5.75@1.95 |
+| 31 | 3 | 3.5 | 1.80 | Adelaide, **GRADINO 3.75->3.5**, over reset 2.025->1.80; FT 5.75@1.90 |
 | 31 | 4 | 4.5 | 1.90 | floor, gara prolifica (Vietnam 0-4) |
 | 38 | 4 | 4.5 | 2.425 | stessa gara, deriva temporale |
 | 30 | 1 | 1.5 | 2.10 | floor, amichevole gol attesi bassi |
 | 33 | 1 | 1.5 | 2.425 | stessa gara, deriva temporale |
 
-**Prima conferma "sopra il floor":** Adelaide 3 gol al 24' → line 3.75 (floor+0.25)
-con Over 1.80. Minuto precoce + gara prolifica → il mercato tiene la line sopra il
-pavimento e l'Over cheap. Coerente col modello.
+**Ciclo completo osservato** su Adelaide (3 gol): sopra-floor con over cheap → deriva
+in salita → gradino di ribasso al floor con reset dell'over. Tutti i regimi confermati.
 
-> Manca ancora: uno screen col **gradino di ribasso in atto** (la stessa line che
-> passa da sopra-floor al floor tra due rilevazioni) e casistiche **gol_segnati 0 e 2**.
+> Manca ancora: casistiche **gol_segnati 0 e 2**, e coppie **1T+FT** per le altre gare
+> (finora la line FT è stata rilevata solo per Adelaide).
