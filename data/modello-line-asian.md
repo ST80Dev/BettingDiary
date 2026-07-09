@@ -99,5 +99,17 @@ distribuzione di line e quota Over al minuto d'ingresso.
 **Ciclo completo osservato** su Adelaide (3 gol): sopra-floor con over cheap → deriva
 in salita → gradino di ribasso al floor con reset dell'over. Tutti i regimi confermati.
 
-> Manca ancora: casistiche **gol_segnati 0 e 2**, e coppie **1T+FT** per le altre gare
-> (finora la line FT è stata rilevata solo per Adelaide).
+**Righe stimate (da alert app, non bet365):** aggiunte casistiche 0 e 2 gol via stima
+dal modello (ancora = riga O/U FT dell'alert). A ~28-32' con ~14-18 min al 45',
+P(≥1 gol entro HT) sta in fascia ~41-46% → Over floor ~2.05-2.15. Da verificare con
+screenshot bet365 reali (possibile over piu cheap in gare a dominio front-loaded).
+
+| min | gol | line | Over | fonte |
+|---|---|---|---|---|
+| 30 | 0 | 0.5 | ~2.10 | stimata (Marconi U20 0-0) |
+| 32 | 2 | 2.5 | ~2.15 | stimata (Project51O 2-0) |
+| 30 | 1 | 1.5 | ~2.10 | stimata (Spain U19W 1-0) |
+| 28 | 1 | 1.5 | ~2.05 | stimata (Halifax 0-1) |
+
+> Serve ancora: **screenshot bet365 reali** per 0 e 2 gol (per verificare le stime) e
+> coppie **1T+FT** per gare diverse da Adelaide.
