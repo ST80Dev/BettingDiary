@@ -4,6 +4,11 @@ Regole del mercato **"Somma goal asiatica nel 1° tempo"** su bet365, ricavate d
 osservazione diretta di quote live. Riferimento: giocata **sempre sul lato Over**,
 ingresso tipico intorno al **30-32'** (all'arrivo dell'alert, +1-2 min).
 
+**Finestra di gioco:** dal minuto d'ingresso alla **fine del 1° tempo ≈ 47'**
+(45' + **almeno 2 min di recupero** medio). Va sempre usato ~47' come estremo nelle
+stime: allunga la finestra e alza P(≥1 gol entro HT) di ~2-3 punti (Over ~0.05 piu cheap).
+Le quote reali bet365 hanno gia il recupero incorporato.
+
 ## 1. Regola del pavimento (floor)
 
 Con **X gol già segnati**, la line **non può mai includere gli X gol già fatti**,
@@ -106,10 +111,10 @@ screenshot bet365 reali (possibile over piu cheap in gare a dominio front-loaded
 
 | min | gol | line | Over | fonte |
 |---|---|---|---|---|
-| 30 | 0 | 0.5 | ~2.10 | stimata (Marconi U20 0-0) |
-| 32 | 2 | 2.5 | ~2.15 | stimata (Project51O 2-0) |
-| 30 | 1 | 1.5 | ~2.10 | stimata (Spain U19W 1-0) |
-| 28 | 1 | 1.5 | ~2.05 | stimata (Halifax 0-1) |
+| 30 | 0 | 0.5 | ~2.05 | stimata (Marconi U20 0-0), finestra ->47' |
+| 32 | 2 | 2.5 | ~2.10 | stimata (Project51O 2-0), finestra ->47' |
+| 30 | 1 | 1.5 | ~2.05 | stimata (Spain U19W 1-0), finestra ->47' |
+| 28 | 1 | 1.5 | ~2.00 | stimata (Halifax 0-1), finestra ->47' |
 
 > Serve ancora: **screenshot bet365 reali** per 0 e 2 gol (per verificare le stime) e
 > coppie **1T+FT** per gare diverse da Adelaide.
