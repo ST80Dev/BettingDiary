@@ -143,6 +143,27 @@ form { display: block; }
 .sel-block.field-row { display: flex; }
 .sel-block.field-row.hidden { display: none; }
 
+/* ---- esito contestuale nel form giocata ---- */
+.result-hint { font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--muted); }
+.result-profit { margin-top: 10px; font-size: 0.95rem; font-weight: 800; }
+.result-profit.pos { color: var(--green); }
+.result-profit.neg { color: var(--red); }
+.result-profit.zero { color: var(--muted); }
+#f-result .seg-btn[data-val="win"].active,
+#f-result .seg-btn[data-val="half_win"].active {
+  border-color: var(--green); background: var(--green-soft); color: var(--green);
+  box-shadow: 0 4px 12px rgba(18, 185, 129, 0.18);
+}
+#f-result .seg-btn[data-val="loss"].active,
+#f-result .seg-btn[data-val="half_loss"].active {
+  border-color: var(--red); background: var(--red-soft); color: var(--red);
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.18);
+}
+#f-result .seg-btn[data-val="void"].active {
+  border-color: var(--yellow); background: var(--yellow-soft); color: var(--yellow);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.18);
+}
+
 input, select, textarea {
   background: var(--bg2); border: 2px solid var(--border); color: var(--text);
   border-radius: 12px; padding: 13px 14px; font-size: 1.05rem; width: 100%;
@@ -223,6 +244,39 @@ details[open] summary::before { content: "▾ "; }
 .kpi .kpi-sub { color: var(--muted); font-size: 0.78rem; margin-top: 4px; }
 .kpi-value.pos { color: var(--green); }
 .kpi-value.neg { color: var(--red); }
+
+/* ---- cassa attuale (banner dashboard) ---- */
+.cassa-card {
+  background: var(--grad); color: #fff; border-radius: var(--radius);
+  padding: 18px 20px; margin-bottom: 16px;
+  box-shadow: 0 6px 18px rgba(79, 124, 255, 0.3);
+}
+.cassa-card:empty { display: none; }
+.cassa-label {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;
+  font-weight: 700; opacity: 0.92; display: flex; align-items: center; gap: 8px;
+}
+.cassa-tag {
+  background: rgba(255, 255, 255, 0.22); border-radius: 999px; padding: 2px 9px;
+  font-size: 0.68rem; letter-spacing: 0; text-transform: none; font-weight: 700;
+}
+.cassa-value { font-size: 2rem; font-weight: 800; margin-top: 4px; letter-spacing: -0.02em; }
+.cassa-sub { font-size: 0.82rem; margin-top: 6px; opacity: 0.92; }
+
+/* ---- movimenti di cassa (impostazioni) ---- */
+.cassa-total-row { font-size: 0.95rem; margin-bottom: 12px; }
+.cassa-total-row strong { font-weight: 800; }
+.deposit-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 6px; }
+.deposit-item {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px 14px; display: flex; justify-content: space-between; align-items: center;
+  gap: 10px; box-shadow: var(--shadow-sm);
+}
+.deposit-item .d-info { display: flex; flex-direction: column; gap: 2px; }
+.deposit-item .d-amount { font-weight: 800; font-size: 1.05rem; }
+.deposit-item .d-amount.pos { color: var(--green); }
+.deposit-item .d-amount.neg { color: var(--red); }
+.deposit-item small { color: var(--muted); font-size: 0.8rem; }
 
 .chart-box {
   background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
