@@ -76,6 +76,32 @@ Confronto al floor intorno al 30-31':
 - Vietnam (molto prolifica) → floor 4.5 @ Over **1.90**
 - Regensburg (amichevole, pochi gol) → floor 1.5 @ Over **2.10**
 
+## 7. Calibrazione alert-app vs bet365 reale (correzione dominio)
+
+Quando la sorgente è l'**alert app** (non bet365), l'ancora è la sua riga O/U — spesso un
+**longshot spennato** (es. O/U 1.5 @ 1.04/9.00). Confronto sullo **stesso match** (Box Hill W
+1-0, ~30', DA 40-4):
+
+| | da alert (O/U 1.5 @1.04/9.00) | bet365 reale |
+|---|---|---|
+| λ residuo | 2.26 | ~2.55 (FT 3.5) |
+| P(≥1 gol entro HT) | ~45% | ~51% |
+| Over floor 1.5 | stima ~2.10 | reale **1.85-1.95** |
+
+→ La stima da solo-alert è **troppo alta di ~0.15-0.20**, per due motivi: (a) il longshot
+O/U sottostima λ; (b) **front-loading** nelle gare a forte dominio (ritmo attuale > media match).
+
+**Correzione da applicare quando si ha solo l'alert** (in base al rapporto Attacchi Pericolosi):
+
+| Dominio (rapporto DA) | Correzione Over |
+|---|---|
+| Forte (>5:1) | −0.15 / −0.20 |
+| Moderato (~2:1) | −0.05 / −0.10 |
+| Equilibrato | nessuna |
+
+Se invece si ha la **line FT reale di bet365**, usarla direttamente come ancora: è già corretta
+(niente aggiustamento dominio necessario, vedi validazione Box Hill in §case).
+
 ## 5. Cosa registriamo (data/storico-quote-asian.csv)
 
 Colonne: `minuto, gol_segnati, line, quota, line_ft, quota_ft, fonte, note`.
