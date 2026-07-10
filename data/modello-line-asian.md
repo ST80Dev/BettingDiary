@@ -102,6 +102,13 @@ O/U sottostima λ; (b) **front-loading** nelle gare a forte dominio (ritmo attua
 Se invece si ha la **line FT reale di bet365**, usarla direttamente come ancora: è già corretta
 (niente aggiustamento dominio necessario, vedi validazione Box Hill in §case).
 
+**⚠️ La line FT batte le statistiche di dominio.** Il predominio territoriale NON implica
+alta aspettativa gol. Esempio (Than KSVN W, 0-0, 36'): dominio estremo (attacchi 60-8,
+possesso 71-29) ma FT line solo **2** e Over floor 0.5 @ **3.00**. Il modello con ancora FT
+prevede P~31% = reale ~31%. Se avessi guardato il dominio avrei sovrastimato di molto.
+→ **Regola: quando c'è la line FT, ignora le stat di dominio; la correzione-dominio è solo
+un ripiego per il caso solo-alert, e può ingannare.**
+
 ## 5. Cosa registriamo (data/storico-quote-asian.csv)
 
 Colonne: `minuto, gol_segnati, line, quota, line_ft, quota_ft, fonte, note`.
