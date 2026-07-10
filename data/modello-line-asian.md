@@ -98,8 +98,18 @@ distribuzione di line e quota Over al minuto d'ingresso.
 | 31 | 3 | 3.5 | 1.80 | Adelaide, **GRADINO 3.75->3.5**, over reset 2.025->1.80; FT 5.75@1.90 |
 | 31 | 4 | 4.5 | 1.90 | floor, gara prolifica (Vietnam 0-4) |
 | 38 | 4 | 4.5 | 2.425 | stessa gara, deriva temporale |
-| 30 | 1 | 1.5 | 2.10 | floor, amichevole gol attesi bassi |
+| 30 | 1 | 1.5 | 2.10 | floor, amichevole gol attesi bassi (Regensburg) |
 | 33 | 1 | 1.5 | 2.425 | stessa gara, deriva temporale |
+| 29 | 1 | 1.5 | 1.85 | floor, gara a forte dominio (Box Hill W); FT 3.5; validazione modello |
+
+**Validazione del modello (Box Hill W, 1 gol, 29'):** con l'ancora FT (line 3.5 →
+~2.55 gol residui) e finestra a 47', il modello prevede **P(≥1 gol entro HT) ≈ 50%**;
+l'Over floor reale 1.5 @ 1.85 implica **~51%**. Stima quasi perfetta.
+
+**Spread della fascia "1 gol" (stessa line 1.5, Over diverso per aspettativa):**
+- Box Hill (forte dominio, FT 3.5) → Over **1.85**
+- Regensburg (amichevole, gol attesi bassi) → Over **2.10**
+→ la line non cambia (resta il floor), ma l'Over ne codifica tutta l'aspettativa gol.
 
 **Ciclo completo osservato** su Adelaide (3 gol): sopra-floor con over cheap → deriva
 in salita → gradino di ribasso al floor con reset dell'over. Tutti i regimi confermati.
